@@ -1,6 +1,6 @@
 # isac-bot
 
-Requirements: MySQL, Node.js
+Requirements: MySQL v8, Node.js v15
 
 Self hosting ISAC Bot:
 
