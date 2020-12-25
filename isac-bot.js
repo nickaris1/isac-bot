@@ -17,7 +17,7 @@ const client = new Discord.Client();
 const DBL = require("dblapi.js");
 const dbl = new DBL(config.topGGtoken, client);
 const helper = require("./helper.js");
-const Hashids = require('hashids');
+const Hashids = require('hashids/cjs');
 const scriptName = __filename.slice(__dirname.length + 1);
 const useTrackerGG = true;
 
