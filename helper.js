@@ -5,7 +5,7 @@
 const moment = require("moment");
 const config = require('./config').production;
 const pool = config.getPool();
-var Hashids = require('hashids');
+var Hashids = require('hashids/cjs');
 
 /******************************
   Helper Functions
