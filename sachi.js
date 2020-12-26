@@ -21,8 +21,8 @@ const Hashids = require('hashids/cjs');
 const scriptName = __filename.slice(__dirname.length + 1);
 const useTrackerGG = true;
 
-const embedFooter = 'via club.ubisoft.com | isacbot.xyz';
-const embedFooterImg = 'https://ubistatic19-a.akamaihd.net/ubicomstatic/en-GB/global/logo/Club-logo_304399.png';
+const embedFooter = 'via club.ubisoft.com | repo.sachi.lk';
+const embedFooterImg = 'https://repo.sachi.lk/isac/assets/img/logo.png';
 
 // Possible commands
 const commands = [
@@ -38,10 +38,8 @@ const commands = [
   'pve',
   'weapons',
   'help',
-  'test',
   'isac',
   'clan',
-  'donate',
   'update_nicknames'
 ];
 
@@ -65,8 +63,6 @@ const platformsMap = {
   'xbl': 'Xbox'
 }
 
-// Milliseconds
-const defaultAutoDeleteTimeout = 30000;
 
 /******************************
   Errors
@@ -85,7 +81,7 @@ const INVALID_AUTO_DELETE_TYPE_ERR = "Error: Please enter a valid auto delete op
   Bot Auth
 *******************************/
 
-if( scriptName == 'dev-bot.js' ) {
+if( scriptName == 'sachi.js' ) {
   client.login(config.devBotToken);
   console.log("----- DEVELOPMENT BOT -----");
 }
@@ -108,27 +104,17 @@ client.on("guildCreate", async function(guild) {
 
 client.on("ready", async function() {
   helper.printStatus("I am ready!");
-
+/*
   let statuses = [
-    '!agent',
-    '!weapons',
-    '!pve',
-    '!exp',
-    '!dz',
-    '!register',
-    '!rank',
-    '!help',
-    '!platform',
-    '!isac',
-    '!donate'
+    'DIRECT MESSAGES'
   ];
-
-  client.user.setPresence({ activity: { name: '!agent', type: "PLAYING"}, status: 'online'});
+*/
+  client.user.setPresence({ activity: { name: ' 👀', type: "WATCHING"}, status: 'online'});
 
   // random status message every 5s
-  setInterval(function(){
-    client.user.setPresence({ activity: { name: statuses[Math.floor(Math.random() * statuses.length)], type: "PLAYING"}, status: 'online'});
-  }, 5000);
+  /*client.setInterval(function(){
+    client.user.setPresence({ activity: { name: statuses[Math.floor(Math.random() * statuses.length)], type: "WATCHING"}, status: 'online'});
+  }, 5000);*/
 });
 
 dbl.on('posted', () => {
@@ -158,7 +144,7 @@ client.on("message", async function(message) {
 
   if( command != 'isac' && prefix != message.content.charAt(0) ) return; // ignore if prefix don't match EXCEPT for isac command
   if( commands.includes(command) == false ) return; // Ignore commands not in "commands" array
-  if( message.autoDelete ) message.delete(defaultAutoDeleteTimeout); // Delete Author's Msg
+  if( message.autoDelete ) message.delete({ timeout: 15000 }); // Delete Author's Msg
 
   message.logCommandID = await helper.logCommands(message); // log command to DB and return entry ID
 
@@ -190,15 +176,15 @@ client.on("message", async function(message) {
       if( isAdmin ) {
         if( args[0] == 'prefix' ) {
           if( args.length == 1 ) {
-            message.channel.send("The server prefix for ISAC is: " + prefix).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+            message.channel.send("The server prefix for ISAC is: " + prefix).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           }
           else {
             if( args[1].length == 1 ) {
               setServerPrefix(message.guild.id, args[1]);
-              message.channel.send("The server's prefix for ISAC is now: " + args[1]).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send("The server's prefix for ISAC is now: " + args[1]).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
             }
             else {
-              message.channel.send("Error: Changing server's prefix to " + args[1] + " failed. You can only set the server's prefix to a single character. Example: !, @, #, $").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send("Error: Changing server's prefix to " + args[1] + " failed. You can only set the server's prefix to a single character. Example: !, @, #, $").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
             }
           }
         }
@@ -217,8 +203,8 @@ client.on("message", async function(message) {
         if( args[0] == 'on' ) {
           pool.query("UPDATE servers SET auto_delete = 1 WHERE server_id = ?", [message.guild.id]);
           message.autoDelete = true;
-          message.delete(defaultAutoDeleteTimeout);
-          message.channel.send("Auto deleting of messages is now active").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+          message.delete({ timeout: 15000 });
+          message.channel.send("Auto deleting of messages is now enabled (15 seconds)").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           return;
         }
         else if( args[0] == 'off' ) {
@@ -230,7 +216,7 @@ client.on("message", async function(message) {
       }
     }
 
-    message.channel.send( getErrorMessage(8) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+    message.channel.send( getErrorMessage(8) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
     return;
   }
 
@@ -239,7 +225,7 @@ client.on("message", async function(message) {
   *************************************************/
   if ( command === "update_nicknames" ) {
     if( isAdmin ) {
-      await message.guild.fetchMembers().then(async function(guild){
+      await message.guild.members.fetch().then(async function(guild){
 
         // exclude server owner as bot can't change owner's nick
         let members = guild.members.cache.filter(function(member){ return member.user.bot === false && member.user.id != member.guild.ownerID })
@@ -267,7 +253,7 @@ client.on("message", async function(message) {
           }
 
           if( success.length > 0 )
-            message.author.send("The following agents have had their nicknames updated in " + message.guild.name + ": " + success.join(', ')).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+            message.author.send("The following agents have had their nicknames updated in " + message.guild.name + ": " + success.join(', ')).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
         }
       });
     }
@@ -282,7 +268,7 @@ client.on("message", async function(message) {
       if( args.length > 0 ) {
         if( args[0] == 'removerole' ) {
           pool.query("UPDATE servers SET clan_role_id = ? WHERE server_id = ?", ['', message.guild.id]);
-          message.channel.send("Clan role has been removed.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+          message.channel.send("Clan role has been removed.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
         }
 
         if( args[0] == 'role' ) {
@@ -293,10 +279,10 @@ client.on("message", async function(message) {
             if( lodash.isEmpty(role_search) == false ) {
               let clan_role_id = role_search.map(function(role){ return role.id })[0];
               pool.query("UPDATE servers SET clan_role_id = ? WHERE server_id = ?", [clan_role_id, message.guild.id]);
-              message.channel.send("Clan role has been set to " + role_arg+".").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send("Clan role has been set to " + role_arg+".").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
             }
             else {
-              message.channel.send( getErrorMessage(7, {role: role_arg}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send( getErrorMessage(7, {role: role_arg}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
             }
           }
           else {
@@ -306,11 +292,11 @@ client.on("message", async function(message) {
                   current_clan_role = message.guild.roles.cache.filter(function(role){ return role.id == res[0].clan_role_id });
 
                   if( current_clan_role ) {
-                    message.channel.send("The current clan role is set to " + current_clan_role.values().next().value.name + ". !rank will only display results where members are of this role or have been manually added.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                    message.channel.send("The current clan role is set to " + current_clan_role.values().next().value.name + ". !rank will only display results where members are of this role or have been manually added.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
                   }
                 }
                 else {
-                  message.channel.send("No clan role has been set.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                  message.channel.send("No clan role has been set.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
                 }
               }
             });
@@ -339,10 +325,10 @@ client.on("message", async function(message) {
 
             embed.setDescription(manual_agent_names.sort().join('\n'));
 
-            message.channel.send(embed).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+            message.channel.send(embed).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           }
           else {
-            message.channel.send("No agents have been manually added for this clan yet.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+            message.channel.send("No agents have been manually added for this clan yet.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           }
         }
 
@@ -367,7 +353,7 @@ client.on("message", async function(message) {
                   agent_name = response.data.results[0].name;
 
                   await pool.query("INSERT INTO server_agents (server_id, agent_name, agent_id, type, added_by_id, added_by_username, date_added) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE added_by_id = ?, added_by_username = ?, date_added = ?", [message.guild.id, agent_name, uplay_id, 'add', message.author.id, message.author.username, moment().format('YYYY-M-D HH:mm:ss'), message.author.id, message.author.username, moment().format('YYYY-M-D HH:mm:ss')]).then(async function(res){
-                    message.channel.send("Agent " +agent_name_arg+ " manually added to clan list.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                    message.channel.send("Agent " +agent_name_arg+ " manually added to clan list.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
                   })
                 }
                 else if( useTrackerGG && response.data.data ) {
@@ -375,11 +361,11 @@ client.on("message", async function(message) {
                   agent_name = response.data.data.platformInfo.platformUserIdentifier;
 
                   await pool.query("INSERT INTO server_agents (server_id, agent_name, agent_id, type, added_by_id, added_by_username, date_added) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE added_by_id = ?, added_by_username = ?, date_added = ?", [message.guild.id, agent_name, uplay_id, 'add', message.author.id, message.author.username, moment().format('YYYY-M-D HH:mm:ss'), message.author.id, message.author.username, moment().format('YYYY-M-D HH:mm:ss')]).then(async function(res){
-                    message.channel.send("Agent " +agent_name_arg+ " manually added to clan list.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                    message.channel.send("Agent " +agent_name_arg+ " manually added to clan list.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
                   })
                 }
                 else {
-                  message.channel.send( getErrorMessage(1, {username: agent_name_arg, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                  message.channel.send( getErrorMessage(1, {username: agent_name_arg, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
                 }
               }
             });
@@ -391,10 +377,10 @@ client.on("message", async function(message) {
             let agent_name_arg = original_message.slice(prefix.length).replace(command, '').replace(args[0], '').trim(); // args without lowercase and space in between
             pool.query("DELETE FROM server_agents WHERE server_id = ? AND agent_name = ?", [message.guild.id, agent_name_arg]).then(function(res){
               if( res.affectedRows > 0 ) {
-                message.channel.send("Manually added clan agent " + agent_name_arg + " removed.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                message.channel.send("Manually added clan agent " + agent_name_arg + " removed.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
               }
               else {
-                message.channel.send("Error: Unable to locate manually added clan agent by the name of " +agent_name_arg+ ".").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+                message.channel.send("Error: Unable to locate manually added clan agent by the name of " +agent_name_arg+ ".").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
               }
             });
           }
@@ -402,7 +388,7 @@ client.on("message", async function(message) {
       }
     }
     else
-      message.author.send( getErrorMessage(5, {server_name: message.channel.guild}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+      message.author.send( getErrorMessage(5, {server_name: message.channel.guild}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
   }
 
   /*************************************************
@@ -413,42 +399,6 @@ client.on("message", async function(message) {
     return;
   }
 
-  /*************************************************
-  // DONATE COMMANDS
-  *************************************************/
-  if ( command === "donate" ) {
-    let donationTitle = "```md\n# Donation Links```" + "```md\n# If you've found the bot useful and would like to donate, you can do so via the options below. Donations will be used to cover server hosting fees. Thanks Agent!```";
-
-    message.author.send(donationTitle);
-
-    let embed1 = new Discord.MessageEmbed()
-      .setTitle("1. Monthly donations via Patreon :link:")
-      .setDescription('Set up a recurring donation plan from as low as $1/month.')
-      .setColor("#dc3545")
-      .setURL('https://www.patreon.com/xenodus')
-      .setThumbnail('https://c5.patreon.com/external/logo/guidelines/wordmark_on_navy.jpg');
-
-    message.author.send( embed1 );
-
-    let embed2 = new Discord.MessageEmbed()
-      .setTitle("2. One time donations via PayPal :link:")
-      .setDescription('Donate however much you want!')
-      .setColor("#3b7bbf")
-      .setURL('https://www.paypal.me/isacbot')
-      .setThumbnail('https://www.paypalobjects.com/webstatic/mktg/logo-center/PP_Acceptance_Marks_for_LogoCenter_150x94.png');
-
-    message.author.send( embed2 );
-
-    let embed3 = new Discord.MessageEmbed()
-      .setTitle("3. Buy a Coffee via Ko-fi :link:")
-      .setColor("#29abe0")
-      .setURL('https://ko-fi.com/xenodus')
-      .setThumbnail('https://uploads-ssl.webflow.com/5c14e387dab576fe667689cf/5ca5bf1dff3c03fbf7cc9b3c_Kofi_logo_RGB_rounded-p-500.png');
-
-    message.author.send( embed3 );
-
-    return;
-  }
 
   /*************************************************
   // SET DEFAULT PLATFORM FOR SERVER
@@ -456,7 +406,7 @@ client.on("message", async function(message) {
   if( command === 'platform' ) {
 
     if( args.length == 0 ) {
-      message.channel.send("This Discord server's platform is currently: " + platformsMap[server_platform]).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+      message.channel.send("This Discord server's platform is currently: " + platformsMap[server_platform]).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
       return;
     }
 
@@ -464,15 +414,15 @@ client.on("message", async function(message) {
       if( isAdmin ) {
         if( platforms.includes(args[0]) ) {
           await pool.query("INSERT INTO platforms (server_id, platform, date_added) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE platform = ?, date_added = ?", [message.guild.id, args[0], moment().format('YYYY-M-D HH:mm:ss'), args[0], moment().format('YYYY-M-D HH:mm:ss')]).then(async function(res){
-            message.channel.send("This Discord server's platform has been updated to: " + platformsMap[args[0]]).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+            message.channel.send("This Discord server's platform has been updated to: " + platformsMap[args[0]]).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           });
         }
         else {
-          message.channel.send( getErrorMessage(4) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+          message.channel.send( getErrorMessage(4) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
         }
       }
       else {
-        message.author.send( getErrorMessage(5, {server_name: message.channel.guild}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+        message.author.send( getErrorMessage(5, {server_name: message.channel.guild}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
       }
     }
   }
@@ -506,7 +456,7 @@ client.on("message", async function(message) {
             agent_name = response.data.results[0].name;
 
             await pool.query("INSERT INTO users (user_id, uplay_id, agent_name, platform, date_added) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uplay_id = ?, agent_name = ?, platform = ?, date_added = ?", [message.author.id, uplay_id, agent_name, server_platform, moment().format('YYYY-M-D HH:mm:ss'), uplay_id, agent_name, server_platform, moment().format('YYYY-M-D HH:mm:ss')]).then(async function(res){
-              message.channel.send("User <-> Agent registered. Fetching Agent stats.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send("User <-> Agent registered. Fetching Agent stats.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
               playerData = await getPlayerData(uplay_id);
               printAgentStat(message, playerData);
             })
@@ -516,24 +466,24 @@ client.on("message", async function(message) {
             agent_name = response.data.data.platformInfo.platformUserIdentifier;
 
             await pool.query("INSERT INTO users (user_id, uplay_id, agent_name, platform, date_added) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uplay_id = ?, agent_name = ?, platform = ?, date_added = ?", [message.author.id, uplay_id, agent_name, server_platform, moment().format('YYYY-M-D HH:mm:ss'), uplay_id, agent_name, server_platform, moment().format('YYYY-M-D HH:mm:ss')]).then(async function(res){
-              message.channel.send("User <-> Agent registered. Fetching Agent stats.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send("User <-> Agent registered. Fetching Agent stats.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
               playerData = await getPlayerData(uplay_id, server_platform, agent_name);
               printAgentStat(message, playerData);
             })
           }
           else {
-            message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+            message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           }
         }
       })
       .catch(function(error){
         console.log(error);
-        message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+        message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
       });
       return;
     }
 
-    message.channel.send( getErrorMessage(2) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+    message.channel.send( getErrorMessage(2) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
   }
 
   /*************************************************
@@ -541,7 +491,7 @@ client.on("message", async function(message) {
   *************************************************/
   if ( command === "unregister" ) {
     await pool.query("DELETE FROM users WHERE user_id = ?", [message.author.id]).then(async function(res){
-      message.channel.send("User <-> Agent link removed.").then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+      message.channel.send("User <-> Agent link removed.").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
       return;
     });
   }
@@ -555,7 +505,7 @@ client.on("message", async function(message) {
       // query DB and checks if user has registered aka linked discord ID to uplay ID else send message prompting to register
       await pool.query("SELECT * FROM users WHERE user_id = ?", [message.author.id]).then(async function(res){
         if( res.length == 0 ) {
-          message.channel.send( getErrorMessage(2) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+          message.channel.send( getErrorMessage(2) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
         }
         else {
           uplay_id = res[0].uplay_id;
@@ -580,7 +530,7 @@ client.on("message", async function(message) {
           username = agentID;
         }
         else {
-          message.channel.send( getErrorMessage(1, {username: message.mentions.users.first(), server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+          message.channel.send( getErrorMessage(1, {username: message.mentions.users.first(), server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
           return;
         }
       }
@@ -603,7 +553,7 @@ client.on("message", async function(message) {
         playerData = await getPlayerData('', server_platform, username);
 
         if( lodash.isEmpty(playerData) ) {
-          message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+          message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
         }
       }
       else {
@@ -617,7 +567,7 @@ client.on("message", async function(message) {
               playerData = await getPlayerData(uplay_id);
             }
             else {
-              message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+              message.channel.send( getErrorMessage(1, {username: username, server_platform: server_platform}) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
             }
           }
         })
@@ -689,7 +639,7 @@ client.on("message", async function(message) {
       }
     }
 
-    message.channel.send( getErrorMessage(3) ).then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); });
+    message.channel.send( getErrorMessage(3) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
   }
 });
 
@@ -737,10 +687,6 @@ async function rankGet(message, type, server_platform) {
         }
       });
     }
-
-    // Test data
-    //members.push({id: '226689814362193920', username: 'test-user'});
-    //members.push({id: '181105837807370241', username: 'test-user-2'});
 
     let results = [];
 
@@ -1213,7 +1159,7 @@ function printRankedResult(message, results, order, title) {
   embed.addField(title, rankingStr);
 
   message.channel.send( embed )
-  .then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); })
+  .then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); })
   .catch(function(err){
     if( err.code == 50013 ) {
       message.author.send( MISSING_PERMISSION_ERR );
@@ -1256,7 +1202,7 @@ function printAgentStat(message, playerData) {
     .setFooter(embedFooter, embedFooterImg);
 
   message.channel.send( embed )
-  .then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); })
+  .then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); })
   .catch(function(err){
     if( err.code == 50013 ) {
       message.author.send( MISSING_PERMISSION_ERR );
@@ -1284,7 +1230,7 @@ async function printAgentEXP(message, playerData) {
     .setFooter(embedFooter, embedFooterImg);
 
   message.channel.send( embed )
-  .then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); })
+  .then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); })
   .catch(function(err){
     if( err.code == 50013 ) {
       message.author.send( MISSING_PERMISSION_ERR );
@@ -1309,7 +1255,7 @@ function printWeaponStat(message, playerData) {
     .setFooter(embedFooter, embedFooterImg);
 
   message.channel.send( embed )
-  .then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); })
+  .then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); })
   .catch(function(err){
     if( err.code == 50013 ) {
       message.author.send( MISSING_PERMISSION_ERR );
@@ -1341,7 +1287,7 @@ function printDZStat(message, playerData) {
     .setFooter(embedFooter, embedFooterImg);
 
   message.channel.send( embed )
-  .then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); })
+  .then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); })
   .catch(function(err){
     if( err.code == 50013 ) {
       message.author.send( MISSING_PERMISSION_ERR );
@@ -1371,7 +1317,7 @@ function printPVEStat(message, playerData) {
     .setFooter(embedFooter, embedFooterImg);
 
   message.channel.send( embed )
-  .then(function(msg){ if( message.autoDelete ) msg.delete(defaultAutoDeleteTimeout); })
+  .then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); })
   .catch(function(err){
     if( err.code == 50013 ) {
       message.author.send( MISSING_PERMISSION_ERR );
