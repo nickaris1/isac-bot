@@ -1,7 +1,7 @@
 {
-  "name": "isac-bot",
+  "name": "isac",
   "version": "2.0.0",
-  "description": "",
+  "description": "unofficial the division 2 isac bot for discord",
   "main": "isac-bot.js",
   "dependencies": {
     "axios": "^0.20.0",
@@ -12,6 +12,7 @@
     "hashids": "^2.2.1",
     "lodash": "^4.17.20",
     "moment": "^2.29.0",
+    "pm2": "^4.5.1",
     "promise-mysql": "^3.3.2",
     "sodium": "^3.0.2",
     "utf-8-validate": "^5.0.2",
@@ -23,12 +24,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xenodus/isac-bot.git"
+    "url": "git+https://github.com/saacki/isacbot.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/xenodus/isac-bot/issues"
+    "url": "https://github.com/saacki/isacbot/issues"
   },
-  "homepage": "https://github.com/xenodus/isac-bot#readme"
+  "homepage": "https://repo.sachi.lk/isac"
 }
