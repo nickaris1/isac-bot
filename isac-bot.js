@@ -68,13 +68,13 @@ const platformsMap = {
   Errors
 *******************************/
 
-const UNABLE_TO_FIND_AGENT_ERR = "Error: Unable to locate Agent %AGENT_NAME% on platform %SERVER_PLATFORM%."; // 1
-const AGENT_REGISTRATION_NOT_FOUND_ERR = "Error: Agent registration not found. Register with !register agent_id"; // 2
+const UNABLE_TO_FIND_AGENT_ERR = "Error: Unable to locate Agent `%AGENT_NAME%` on platform `%SERVER_PLATFORM%`."; // 1
+const AGENT_REGISTRATION_NOT_FOUND_ERR = "Error: Agent registration not found. Register with `!register agent_id`"; // 2
 const INVALID_LEADERBOARD_TYPE_ERR = "Error: Please enter a valid leaderboard. \nOptions available: _" + rankedData.join(', ') + "_"; // 3
 const INVALID_PLATFORM_TYPE_ERR = "Error: Please enter a valid platform. \nOptions available: _" + platforms.join(', ') + "_"; // 4
-const NOT_ADMIN_PERMISSION_ERR = 'Error: This command is only valid for server admins of %SERVER_NAME%.'; // 5
+const NOT_ADMIN_PERMISSION_ERR = 'Error: This command is only valid for server admins of `%SERVER_NAME%`.'; // 5
 const MISSING_PERMISSION_ERR = 'Error: The bot is missing permissions required to send a reply to the channel.'; // 6
-const ROLE_NOT_FOUND_ERR = 'Error: The role %ROLE_ARG% does not exist.'; // 7
+const ROLE_NOT_FOUND_ERR = 'Error: The role `%ROLE_ARG%` does not exist.'; // 7
 const INVALID_AUTO_DELETE_TYPE_ERR = "Error: Please enter a valid auto delete option. \nOptions available: _on, off_"; // 8
 
 /******************************
@@ -1096,10 +1096,10 @@ async function rankGet(message, type, server_platform) {
 
 function printRankedResult(message, results, order, title) {
 
-  let limit = 10;
+  let limit = 15;
   let hashid = new Hashids('ISAC_BOT', 6, 'abcdefghijklmnopqrstuvwxyz'); // pad to length 10
   let hash = hashid.encode(message.logCommandID);
-  let url = "https://isacbot.xyz/web/results/" + hash;
+  let url = "https://repo.sachi.lk/isac" + hash;
   let showMore = results.length > limit ? true : false;
 
   display_results = lodash.sortBy(results, ['ranked_value']).reverse().slice(0, limit);
@@ -1136,13 +1136,13 @@ function printRankedResult(message, results, order, title) {
       rankingStr += (i+1) + ". " + display_results[i].uplay_id.replace('_', '\\_') + " _(" + display_results[i].display_value + ")_ <@" +display_results[i].user_id+ ">\n";
   }
 
-  if( showMore ) {
+ /* if( showMore ) {
     embed.setURL(url);
     rankingStr += "[_(Full list)_]("+url+")";
-  }
+  }*/
 
   if( manualAgentExist ) {
-    rankingStr += "\n\\*\\*\\* indicates manually added agents";
+    rankingStr += "\n\\*\\*\\* indicates manually added agents. showing results up to 15 agents.";
   }
 
   embed.addField(title, rankingStr);
@@ -1163,7 +1163,7 @@ function printAgentStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle("The Division 2 - Agent Stats: " + playerData.name + " ("+playerData.platform+")")
     .setColor("#FF6D10")
-    //.setThumbnail(playerData.avatar)
+    .setThumbnail(message.author.avatarURL())
     .addField("Level", playerData.level_pve, true)
     .addField("DZ Rank", playerData.level_dz, true)
     .addField("Conflict Rank", playerData.level_pvp, true)
@@ -1207,7 +1207,7 @@ async function printAgentEXP(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle("The Division 2 - Agent EXP: " + playerData.name + " ("+playerData.platform+")")
     .setColor("#FF6D10")
-    //.setThumbnail(playerData.avatar)
+    .setThumbnail(message.author.avatarURL())
     .addField("Clan EXP", playerData.xp_clan.toLocaleString(), true)
     .addField("PvE EXP", playerData.xp_ow.toLocaleString(), true)
     .addField("Dark Zone EXP", playerData.xp_dz.toLocaleString(), true)
@@ -1234,7 +1234,7 @@ function printWeaponStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle("The Division 2 - Weapon Kills: " + playerData.name + " ("+playerData.platform+")")
     .setColor("#FF6D10")
-    //.setThumbnail(playerData.avatar)
+    .setThumbnail(message.author.avatarURL())
     .addField("Grenade", playerData.kills_wp_grenade.toLocaleString(), true)
     .addField("Rifle", playerData.kills_wp_rifles.toLocaleString(), true)
     .addField("Sidearm", playerData.kills_wp_pistol.toLocaleString(), true)
@@ -1259,6 +1259,7 @@ function printDZStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle("The Division 2 - Dark Zone Stats: " + playerData.name + " ("+playerData.platform+")")
     .setColor("#A25EFF")
+    .setThumbnail(message.author.avatarURL())
     .addField("Rank", playerData.level_dz, true)
     .addField("EXP", playerData.xp_dz.toLocaleString(), true)
     .addField("Playtime", lodash.round(playerData.timeplayed_dz / 3600) + " hour" + (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? 's':''), true)
@@ -1291,6 +1292,7 @@ function printPVEStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle("The Division 2 - PvE Stats: " + playerData.name + " ("+playerData.platform+")")
     .setColor("#34CFD5")
+    .setThumbnail(message.author.avatarURL())
     .addField("Level", playerData.level_pve, true)
     .addField("Gear Score", playerData.gearscore, true)
     .addField("Specialization", lodash.capitalize(playerData.specialization), true)
@@ -1367,7 +1369,7 @@ async function getPlayerData(uplay_id, platform='', username='') {
             uplay_id: uplay_id,
             platform: response.data.data.platformInfo.platformSlug,
             specialization: response.data.data.segments[0].stats.specialization.displayValue ? response.data.data.segments[0].stats.specialization.displayValue : '-',
-            avatar: response.data.data.platformInfo.avatarUrl,
+            /*avatar: response.data.data.platformInfo.avatarUrl,*/
             gearscore: response.data.data.segments[0].stats.latestGearScore.value,
             ecredits: response.data.data.segments[0].stats.eCreditBalance.value ? response.data.data.segments[0].stats.eCreditBalance.value : 0, // Currency
             commendations: response.data.data.segments[0].stats.commendationScore.value ? response.data.data.segments[0].stats.commendationScore.value : 0,
@@ -1494,7 +1496,7 @@ async function getPlayerData(uplay_id, platform='', username='') {
             uplay_id: uplay_id,
             platform: response.data.platform,
             specialization: response.data.specialization ? response.data.specialization : '-',
-            avatar: response.data.avatar_146,
+            /*avatar: response.data.avatar_146,*/
             gearscore: response.data.gearscore,
             // lastlogin: response.data.utime, // Query time
             ecredits: response.data.ecredits, // Currency
