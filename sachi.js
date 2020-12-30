@@ -1147,13 +1147,12 @@ function printRankedResult(message, results, order, title) {
       rankingStr += (i+1) + ". " + display_results[i].uplay_id.replace('_', '\\_') + " _(" + display_results[i].display_value + ")_ <@" +display_results[i].user_id+ ">\n";
   }
 
- /* if( showMore ) {
-    embed.setURL(url);
-    rankingStr += "[_(Full list)_]("+url+")";
-  }*/
+  if( showMore ) {
+    rankingStr += "\nshowing results maximum 15 agents.";
+  }
 
   if( manualAgentExist ) {
-    rankingStr += "\n\\*\\*\\* indicates manually added agents. showing results up to 15 agents.";
+    rankingStr += "\n\\*\\*\\* indicates manually added agents.";
   }
 
   embed.addField(title, rankingStr);
