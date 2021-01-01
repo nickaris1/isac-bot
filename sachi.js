@@ -21,7 +21,7 @@ const Hashids = require('hashids/cjs');
 const scriptName = __filename.slice(__dirname.length + 1);
 const useTrackerGG = true;
 
-const embedFooter = 'via club.ubisoft.com | repo.sachi.lk';
+const embedFooter = 'via ubisoftconnect.com | repo.sachi.lk';
 const embedFooterImg = 'https://repo.sachi.lk/isac/assets/img/logo.png';
 
 // Possible commands
@@ -1147,7 +1147,7 @@ function printRankedResult(message, results, order, title) {
       rankingStr += (i+1) + ". " + display_results[i].uplay_id.replace('_', '\\_') + " _(" + display_results[i].display_value + ")_ <@" +display_results[i].user_id+ ">\n";
   }
 
-  if( showMore ) {
+ if( showMore ) {
     rankingStr += "\nshowing results maximum 15 agents.";
   }
 
