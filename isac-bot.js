@@ -40,7 +40,8 @@ const commands = [
   'help',
   'isac',
   'clan',
-  'donate'
+  'donate',
+  'obey'
 ];
 
 // Possible parameters for !rank
@@ -148,6 +149,7 @@ client.on("message", async function(message) {
 
   let server_platform = await getServerPlatform(message.guild.id);
   let isAdmin = helper.isAdmin(message.member);
+  let owner = helper.owner(message.member);
   let playerData = {};
 
   message.autoDelete = await isServerAutoDelete(message.guild.id);
@@ -202,6 +204,21 @@ client.on("message", async function(message) {
     }
     return;
   }
+
+  /***********************************
+  // FANCY CODE
+  ************************************/
+
+if ( command === "obey" ) {
+	if ( owner ){
+	message.channel.send("hi my owner! :) sachii#0001")
+	return;
+	}
+	else {
+		message.channel.send("you are not my owner!")
+    return;
+    }
+}
 
   /***********************************
   // AUTO DELETE
@@ -1099,7 +1116,7 @@ function printRankedResult(message, results, order, title) {
   let limit = 15;
   let hashid = new Hashids('ISAC_BOT', 6, 'abcdefghijklmnopqrstuvwxyz'); // pad to length 10
   let hash = hashid.encode(message.logCommandID);
-  let url = "https://repo.sachi.lk/isac" + hash;
+  let url = "https://results.isacbot.gg/" + hash;
   let showMore = results.length > limit ? true : false;
 
   display_results = lodash.sortBy(results, ['ranked_value']).reverse().slice(0, limit);
@@ -1138,6 +1155,8 @@ function printRankedResult(message, results, order, title) {
 
   if( showMore ) {
     rankingStr += "\nshowing results maximum 15 agents.";
+    //     embed.setURL(url);
+//     rankingStr += "[_(Full list)_]("+url+")";
   }
 
   if( manualAgentExist ) {
@@ -1177,7 +1196,8 @@ function printAgentStat(message, playerData) {
 
     //.addField("DZ Rogue Playtime", lodash.round(playerData.timeplayed_rogue / 3600) + "h", true)
 
-    .addField("Kills", playerData.kills_total.toLocaleString(), true)
+    .addField("Total Kills", playerData.kills_total.toLocaleString(), true)
+    .addField("Specialization Kills", playerData.kills_specialization.toLocaleString(), true)
     .addField("Headshot Kills", playerData.kills_headshot.toLocaleString() + " ("+lodash.round(playerData.kills_headshot/playerData.kills_total*100)+"%)", true)
     .addField("Skill Kills", playerData.kills_skill.toLocaleString() + " ("+lodash.round(playerData.kills_skill/playerData.kills_total*100)+"%)", true)
 
@@ -1264,12 +1284,12 @@ function printDZStat(message, playerData) {
     .addField("Playtime", lodash.round(playerData.timeplayed_dz / 3600) + " hour" + (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? 's':''), true)
     .addField("Rogue Playtime", lodash.round(playerData.timeplayed_rogue / 3600) + " hour" + (lodash.round(playerData.timeplayed_rogue / 3600) > 1 ? 's':''), true)
     .addField("Longest Time Rogue", lodash.round(playerData.maxtime_rogue / 60) + " min" + (lodash.round(playerData.maxtime_rogue / 60) > 1 ? 's':''), true)
-    .addField("Players Killed", playerData.kills_pvp_dz_total.toLocaleString(), true)
+    .addField("Total Players Killed (includes conflict)", playerData.kills_pvp_dz_total.toLocaleString(), true)
     .addField("Rogues Killed", playerData.kills_pvp_dz_rogue.toLocaleString(), true)
     // mob kills
     .addField("Hyenas Killed", playerData.kills_pve_dz_hyenas.toLocaleString(), true)
     .addField("Outcasts Killed", playerData.kills_pve_dz_outcasts.toLocaleString(), true)
-    .addField("Black Tusks Killed", playerData.kills_pve_dz_blacktusk.toLocaleString(), true)
+//     .addField("Black Tusks Killed", playerData.kills_pve_dz_blacktusk.toLocaleString(), true)
     .addField("True Sons Killed", playerData.kills_pve_dz_truesons.toLocaleString(), true)
     .addField("Elites Killed", playerData.kills_pvp_elitebosses.toLocaleString(), true)
 
@@ -1402,7 +1422,7 @@ async function getPlayerData(uplay_id, platform='', username='') {
             kills_pve_dz_outcasts: response.data.data.segments[0].stats.killsFactionDzCultists.value,
             kills_pve_dz_blacktusk: response.data.data.segments[0].stats.killsFactionDzEndgame.value,
             kills_pve_dz_truesons: response.data.data.segments[0].stats.killsFactionDzMilitia.value,
-            kills_pvp_dz_total: 0,
+            kills_pvp_dz_total: response.data.data.segments[0].stats.playersKilled.value,
             kills_pvp_elitebosses: response.data.data.segments[0].stats.killsRoleDzElite.value,
             kills_pvp_namedbosses: response.data.data.segments[0].stats.killsRoleDzNamed.value,
             // pvp
@@ -1412,7 +1432,7 @@ async function getPlayerData(uplay_id, platform='', username='') {
             timeplayed_pvp: response.data.data.segments[0].stats.timePlayedConflict.value, // pvp but not dark zone, conflict?
             // misc acct stats
             timeplayed_total: response.data.data.segments[0].stats.timePlayed.value,
-            kills_total: response.data.data.segments[0].stats.killsPvP.value + response.data.data.segments[0].stats.killsNpc.value,
+            kills_total: response.data.data.segments[0].stats.killsSkill.value + response.data.data.segments[0].stats.killsSpecializationSharpshooter.value + response.data.data.segments[0].stats.killsSpecializationSurvivalist.value + response.data.data.segments[0].stats.killsSpecializationDemolitionist.value + response.data.data.segments[0].stats.playersKilled.value + response.data.data.segments[0].stats.killsNpc.value,
             looted: response.data.data.segments[0].stats.itemsLooted.value,
             headshots: response.data.data.segments[0].stats.headshots.value, // # of headshots
             // kills by source
@@ -1430,7 +1450,7 @@ async function getPlayerData(uplay_id, platform='', username='') {
             kills_wp_smg: response.data.data.segments[0].stats.killsWeaponSubMachinegun.value,
             kills_wp_shotgun: response.data.data.segments[0].stats.killsWeaponShotgun.value,
             kills_wp_rifles: response.data.data.segments[0].stats.killsWeaponRifle.value,
-            kills_specialization: response.data.data.segments[0].stats.killsSpecializationSharpshooter.value + response.data.data.segments[0].stats.killsSpecializationSurvivalist.value + response.data.data.segments[0].stats.killsSpecializationDemolitionist.value,
+            kills_specialization:  response.data.data.segments[0].stats.killsSpecializationSharpshooter.value + response.data.data.segments[0].stats.killsSpecializationSurvivalist.value + response.data.data.segments[0].stats.killsSpecializationDemolitionist.value,
           }
 
           exp_data = await pool.query("SELECT clan_exp, pve_exp, dz_exp, DATE_FORMAT(date_added, '%Y-%m-%d') as date FROM daily_exp_snapshots WHERE uplay_id = ? GROUP BY date ORDER BY date_added DESC LIMIT 30", [playerData.uplay_id]);
