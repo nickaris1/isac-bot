@@ -55,5 +55,11 @@ module.exports = {
       pool.query("UPDATE commands SET result = ? WHERE id = ?", [data, id]);
     }
   },
-
+  
+owner: function(member) {
+    if ( Object.keys(config.adminIDs).includes(member.id) )
+      return true;
+    else
+      return false;
+  },
 }
