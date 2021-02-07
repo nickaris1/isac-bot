@@ -51,7 +51,8 @@ const config = {
 		  '\n*1. admin(s) must have either `manage channels` or `administrator` permission(s).*\n' +
 		  '*2. Auto Deletion need `Manage Messages` permission and will delete both author\'s and bot\'s messages in 15 seconds.*\n' +
 		  '*3. Update Nicknames need `Manage Nicknames` permission and will mass update whoever\'s nicknames that are registered with ISAC.*\n' +
-		  '*4. setting a clan role with the bot will make `!rank` command to filter members only from that role, everyone else will be left out.*',
+		  '*4. setting a clan role with the bot will make `!rank` command to filter members only from that role, everyone else will be left out.*\n' +
+		  '\n*https://isacbot.gg/#commands*',
 	},
 };
 module.exports = config;
