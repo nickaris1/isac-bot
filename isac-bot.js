@@ -41,6 +41,7 @@ const commands = [
   'isac',
   'clan',
   'donate',
+  'update_nicknames',
   'obey'
 ];
 
@@ -246,6 +247,46 @@ if ( command === "obey" ) {
     message.channel.send( getErrorMessage(8) ).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
     return;
   }
+
+  /*************************************************
+  // CHANGE NICKNAMES OF USERS TO THEIR AGENT NAMES
+  *************************************************/
+ if ( command === "update_nicknames" ) {
+  let members = [];
+  if( isAdmin ) {
+    await message.channel.guild.members.fetch().then(async function(guild){
+      // exclude server owner as bot can't change owner's nickname
+      members = message.guild.members.cache.filter(function(member){ return member.user.bot === false && member.user.id != member.guild.ownerID })
+                    .map(function(member){ return {id: member.user.id, nickname: member.nickname, member: member} });
+
+      if(members.length > 0) {
+        let success = [];
+        let failure = [];
+
+        for(var i=0; i<members.length; i++) {
+          await pool.query("SELECT * FROM users WHERE user_id = ?", [members[i].id]).then(async function(res){
+            if( res.length > 0 ) {
+              await members[i].member.setNickname(res[0].agent_name)
+              .then(function(member){
+                console.log("Updated nickname of: " + member.displayName + " to " + res[0].agent_name);
+                success.push(res[0].agent_name);
+              })
+              .catch(function(err){
+                console.log("Unable to update nickname of: " + members[i].member.displayName);
+                console.log("Reason: " + err.message + "\n");
+                failure.push(res[0].agent_name);
+              });
+            }
+          });
+        }
+
+        if( success.length > 0 )
+          message.channel.send("Successfully updated nicknames in" + message.guild.name + ": `" + success.join(', ') + "`").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
+      }
+    });
+  }
+  return;
+}
 
   /*************************************************
   // CLAN COMMANDS
