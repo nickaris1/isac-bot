@@ -281,7 +281,7 @@ if ( command === "obey" ) {
         }
 
         if( success.length > 0 )
-          message.channel.send("Successfully updated nicknames in" + message.guild.name + ": `" + success.join(', ') + "`").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
+          message.channel.send("Successfully updated nicknames in " + message.guild.name + ": `" + success.join(', ') + "`").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
       }
     });
   }
