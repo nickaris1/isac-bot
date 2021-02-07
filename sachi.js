@@ -243,11 +243,11 @@ if ( command === "obey" ) {
   // CHANGE NICKNAMES OF USERS TO THEIR AGENT NAMES
   *************************************************/
   if ( command === "update_nicknames" ) {
+  	let members = [];
     if( isAdmin ) {
-      await message.guild.members.fetch().then(async function(guild){
-
-        // exclude server owner as bot can't change owner's nick
-        let members = guild.members.cache.filter(function(member){ return member.user.bot === false && member.user.id != member.guild.ownerID })
+      await message.channel.guild.members.fetch().then(async function(guild){
+        // exclude server owner as bot can't change owner's nickname
+        members = message.guild.members.cache.filter(function(member){ return member.user.bot === false && member.user.id != member.guild.ownerID })
                       .map(function(member){ return {id: member.user.id, nickname: member.nickname, member: member} });
 
         if(members.length > 0) {
@@ -272,7 +272,7 @@ if ( command === "obey" ) {
           }
 
           if( success.length > 0 )
-            message.author.send("The following agents have had their nicknames updated in " + message.guild.name + ": " + success.join(', ')).then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
+            message.channel.send("Successfully updated nicknames in" + message.guild.name + ": `" + success.join(', ') + "`").then(function(msg){ if( message.autoDelete ) msg.delete({ timeout: 15000 }); });
         }
       });
     }
