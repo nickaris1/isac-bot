@@ -51,9 +51,13 @@ const rankedData = [
   'gearscore',
   'commendation',
   'clanexp',
+  'cxp',
   'clanexp24h',
+  'cxp24h',
   'clanexp7d',
-  'clanexp30d'
+  'cxp7d',
+  'clanexp30d',
+  'cxp30d'
 ];
 
 // Possible parameters for !platform
