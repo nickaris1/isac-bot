@@ -19,33 +19,41 @@ pool.query("SELECT server_agents.*, platforms.platform  FROM `server_agents` LEF
   if( response.length > 0 ) {
     for(var i=0; i<response.length; i++) {
       agent = response[i];
+      let curI = i;
 
       if( useTrackerGG )
         agent_data = await getPlayerData(agent.uplay_id, agent.platform, agent.agent_name);
       else
         agent_data = await getPlayerData(agent.uplay_id);
 
+      let queryPromise;
       if( lodash.isEmpty(agent_data) == false ) {
 
-        pool.query("INSERT INTO daily_exp_snapshots (uplay_id, clan_exp, pve_exp, dz_exp, date_added) VALUES (?, ?, ?, ?, ?)", [
+        queryPromise = pool.query("INSERT INTO daily_exp_snapshots (uplay_id, clan_exp, pve_exp, dz_exp, date_added) VALUES (?, ?, ?, ?, ?)", [
           agent.agent_id,
           agent_data.xp_clan,
           agent_data.xp_ow,
           agent_data.xp_dz,
           moment().format('YYYY-M-D HH:mm:ss')
-        ]);
+        ]).then((res) => {
+          helper.printStatus("[Manual] Created daily exp record for " + agent_data.name);
+          helper.printStatus( curI+1 + "/" + response.length );
+        });
 
         // console.log( agent_data );
 
-        helper.printStatus("[Manual] Created daily exp record for " + agent_data.name);
-        helper.printStatus( i+1 + "/" + response.length );
       }
       else {
-        pool.query("DELETE FROM server_agents WHERE id = ?", [agent.id]);
-        helper.printStatus("Deleted user id: " + agent.id);
+        queryPromise = pool.query("DELETE FROM server_agents WHERE id = ?", [agent.id]).then((res) => {
+          helper.printStatus("Deleted user id: " + agent.id);
+        });
+      }
+      if (i == response.length - 1) {
+        queryPromise.then((res) => {
+          process.exit();
+        });
       }
     }
-    process.exit();
   }
 })
 
