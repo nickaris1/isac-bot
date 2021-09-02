@@ -1201,7 +1201,7 @@ function printRankedResult(message, results, order, title) {
   if( showMore ) {
     rankingStr += "\nto see full results click ";
     embed.setURL(url);
-    rankingStr += "[_(here)_]("+url+")";
+    rankingStr += "[_here._]("+url+")";
   }
 
   if( manualAgentExist ) {
