@@ -51,9 +51,13 @@ const rankedData = [
   'ecredit',
   'gearscore',
   'commendation',
+  'cxp',
   'clanexp',
+  'cxp24h',
   'clanexp24h',
+  'cxp7d',
   'clanexp7d',
+  'cxp30d',
   'clanexp30d'
 ];
 
@@ -1154,10 +1158,10 @@ async function rankGet(message, type, server_platform) {
 
 function printRankedResult(message, results, order, title) {
 
-  let limit = 15;
+  let limit = 10;
   let hashid = new Hashids('ISAC_BOT', 6, 'abcdefghijklmnopqrstuvwxyz'); // pad to length 10
   let hash = hashid.encode(message.logCommandID);
-  let url = "https://results.isacbot.gg/" + hash;
+  let url = "https://results.isacbot.gg/?hash=" + hash;
   let showMore = results.length > limit ? true : false;
 
   display_results = lodash.sortBy(results, ['ranked_value']).reverse().slice(0, limit);
@@ -1195,9 +1199,9 @@ function printRankedResult(message, results, order, title) {
   }
 
   if( showMore ) {
-    rankingStr += "\nshowing results maximum 15 agents.";
-    //     embed.setURL(url);
-//     rankingStr += "[_(Full list)_]("+url+")";
+    rankingStr += "\nto see full results click ";
+    embed.setURL(url);
+    rankingStr += "[_(Full list)_]("+url+")";
   }
 
   if( manualAgentExist ) {
