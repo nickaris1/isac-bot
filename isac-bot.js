@@ -1199,9 +1199,9 @@ function printRankedResult(message, results, order, title) {
   }
 
   if( showMore ) {
-    rankingStr += "\nto see full results click ";
+    rankingStr += "\nto see full results ";
     embed.setURL(url);
-    rankingStr += "[_here._]("+url+")";
+    rankingStr += "[**click here.**]("+url+")";
   }
 
   if( manualAgentExist ) {
