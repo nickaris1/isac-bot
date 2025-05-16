@@ -15,7 +15,7 @@ import {
   UNABLE_TO_FIND_AGENT_ERR,
 } from './src/utils/errors';
 const client = new Discord.Client({
-  intents: ['GUILDS'],
+  intents: ['Guilds'],
 });
 const useTrackerGG = true;
 

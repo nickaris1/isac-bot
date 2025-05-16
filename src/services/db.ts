@@ -17,14 +17,6 @@ function prismaClientGenerator() {
           return query(args);
         },
       },
-      status: {
-        delete: async () => {
-          throw new Error('Status cannot be deleted');
-        },
-        deleteMany: async () => {
-          throw new Error('Status cannot be deleted');
-        },
-      },
     },
   }) as PClient;
 }

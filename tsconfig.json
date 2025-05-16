@@ -7,7 +7,7 @@
     },
     "target": "ESNext" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     "module": "ESNext" /* Specify what module code is generated. */,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "resolveJsonModule": true /* Enable importing .json files. */,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist" /* Specify an output folder for all emitted files. */,
@@ -20,6 +20,6 @@
     "strictFunctionTypes": true /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */,
     "alwaysStrict": true /* Ensure 'use strict' is always emitted. */,
     "skipLibCheck": false,
-    "typeRoots": ["./src/types", "bun-types", "./node_modules/@discordjs/typings"]
+    "typeRoots": ["./types", "bun-types"]
   }
 }
