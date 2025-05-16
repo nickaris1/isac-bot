@@ -1,2 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Change this if you're using a different database
+  url      = env("DATABASE_URL") // Make sure to set your database URL in the .env file
+}
+
+model Command {
+  id        Int      @id @default(autoincrement())
+  command   String
+  userId    String
+  username  String
+  serverId  String
+  hash      String   @default("")
+  result    String   @default("")
+  dateAdded DateTime @default(now())
+}
+
+model DailyExpSnapshot {
+  id        Int      @id @default(autoincrement())
+  uplayId   String
+  clanExp   BigInt
+  pveExp    BigInt
+  dzExp     BigInt
+  dateAdded DateTime @default(now())
+}
+
+model Platform {
+  id        Int      @id @default(autoincrement())
+  serverId  String   @unique
+  platform  PlatformType @default(uplay)
+  dateAdded DateTime @default(now())
+}
+
+model Server {
+  id            Int      @id @default(autoincrement())
+  serverId      String   @unique
+  name          String
+  prefix        String   @default("")
+  clanRoleId    String   @default("")
+  autoDelete    Boolean  @default(false)
+  dateAdded     DateTime @default(now())
+  lastActive    DateTime @default(now())
+}
+
+model ServerAgent {
+  id              Int      @id @default(autoincrement())
+  serverId        String
+  agentName       String
+  agentId         String   @map("agent_id") // Maps to the SQL column name
+  type            AgentType
+  addedById       String
+  addedByUsername String
+  dateAdded       DateTime @default(now())
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  uplayId   String
+  agentName String   @default("")
+  platform  PlatformType @default(uplay)
+  dateAdded DateTime @default(now())
+}
 
 
+enum PlatformType {
+  uplay
+  psn
+  xbl
+}
+
+enum AgentType {
+  add
+  remove
+}

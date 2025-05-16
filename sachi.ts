@@ -1,103 +1,85 @@
 /******************************
-  Prod / Dev
-*******************************/
-
-const config = require("./config").production;
-
-/******************************
   Variables & Libs
 *******************************/
 
-const lodash = require("lodash");
-const axios = require("axios");
+import axios from 'axios';
 const pool = config.getPool();
-const moment = require("moment");
-const Discord = require("discord.js");
+import Discord from 'discord.js';
+import {config} from './config';
+import {isEmpty} from './src/utils/helpers';
 const client = new Discord.Client();
-/*const DBL = require("dblapi.js");
-const dbl = new DBL(config.topGGtoken, client);*/
-const helper = require("./helper.js");
-const Hashids = require("hashids/cjs");
-const scriptName = __filename.slice(__dirname.length + 1);
 const useTrackerGG = true;
 
-const embedFooter = "via ubisoftconnect.com | repo.sachi.lk";
-const embedFooterImg = "https://repo.sachi.lk/isac/assets/img/logo.png";
+const embedFooter = 'via ubisoftconnect.com | repo.sachi.lk';
+const embedFooterImg = 'https://repo.sachi.lk/isac/assets/img/logo.png';
 
 // Possible commands
 const commands = [
-  "register",
-  "unregister",
-  "autodelete",
-  "agent",
-  "dz",
-  "exp",
-  "darkzone",
-  "rank",
-  "platform",
-  "pve",
-  "weapons",
-  "help",
-  "isac",
-  "clan",
-  "update_nicknames",
-  "obey",
-  "status",
+  'register',
+  'unregister',
+  'autodelete',
+  'agent',
+  'dz',
+  'exp',
+  'darkzone',
+  'rank',
+  'platform',
+  'pve',
+  'weapons',
+  'help',
+  'isac',
+  'clan',
+  'update_nicknames',
+  'obey',
+  'status',
 ];
 
 // Possible parameters for !rank
 const rankedData = [
-  "playtime",
-  "ecredit",
-  "gearscore",
-  "commendation",
-  "cxp",
-  "clanexp",
-  "cxp24h",
-  "clanexp24h",
-  "cxp7d",
-  "clanexp7d",
-  "cxp30d",
-  "clanexp30d",
+  'playtime',
+  'ecredit',
+  'gearscore',
+  'commendation',
+  'cxp',
+  'clanexp',
+  'cxp24h',
+  'clanexp24h',
+  'cxp7d',
+  'clanexp7d',
+  'cxp30d',
+  'clanexp30d',
 ];
 
 // Possible parameters for !platform
-const platforms = ["uplay", "psn", "xbl"];
+const platforms = ['uplay', 'psn', 'xbl'];
 
 /******************************
   Bot Auth
 *******************************/
-
-if (scriptName == "sachi.js") {
-  client.login(config.devBotToken);
-  console.log("----- DEVELOPMENT BOT -----");
-} else {
-  client.login(config.botToken);
-  console.log("----- PRODUCTION BOT -----");
-}
+client.login(config.devBotToken);
 
 /******************************
   Event Listeners
 *******************************/
 
-client.on("error", (e) => console.error(e));
-client.on("warn", (e) => console.warn(e));
+client.on('error', e => console.error(e));
+client.on('warn', e => console.warn(e));
 // client.on("debug", (e) => console.info(e));
 
-client.on("guildCreate", async function (guild) {
-  helper.printStatus("Joined a new guild: " + guild.name);
+client.on('guildCreate', async function (guild) {
+  helper.printStatus('Joined a new guild: ' + guild.name);
 });
 
-client.on("ready", async function () {
-  helper.printStatus("I am ready!");
+client.on('ready', async function () {
+  helper.printStatus('I am ready!');
   /*
   let statuses = [
     'DIRECT MESSAGES'
   ];
 */
   client.user.setPresence({
-    activity: { name: " 👀", type: "WATCHING" },
-    status: "online",
+    activity: {name: ' 👀', type: 'WATCHING'},
+    status: 'online',
   });
 
   // random status message every 5s
@@ -114,7 +96,7 @@ client.on("ready", async function () {
   Message Listener
 *******************************/
 
-client.on("message", async function (message) {
+client.on('message', async function (message) {
   if (message.author.bot) return; // Ignore bot messages
   if (!message.channel.guild) return; // Ignore dm
 
@@ -135,44 +117,44 @@ client.on("message", async function (message) {
 
   message.autoDelete = await isServerAutoDelete(message.guild.id);
 
-  if (command != "isac" && prefix != message.content.charAt(0)) return; // ignore if prefix don't match EXCEPT for isac command
+  if (command != 'isac' && prefix != message.content.charAt(0)) return; // ignore if prefix don't match EXCEPT for isac command
   if (commands.includes(command) == false) return; // Ignore commands not in "commands" array
-  if (message.autoDelete) message.delete({ timeout: 15000 }); // Delete Author's Msg
+  if (message.autoDelete) message.delete({timeout: 15000}); // Delete Author's Msg
 
   message.logCommandID = await helper.logCommands(message); // log command to DB and return entry ID
 
   // Output Commands Sent To Log
-  console.log("----------------------------------------------");
-  helper.printStatus("Server: " + message.guild.name);
-  helper.printStatus("Message: " + message.content);
-  helper.printStatus("Author: " + message.author.username);
-  helper.printStatus("Server Platform: " + server_platform);
-  helper.printStatus("Is Admin: " + isAdmin);
-  helper.printStatus("Auto Delete: " + message.autoDelete);
-  helper.printStatus("Use Tracker GG: " + useTrackerGG);
-  console.log("----------------------------------------------");
+  console.log('----------------------------------------------');
+  helper.printStatus('Server: ' + message.guild.name);
+  helper.printStatus('Message: ' + message.content);
+  helper.printStatus('Author: ' + message.author.username);
+  helper.printStatus('Server Platform: ' + server_platform);
+  helper.printStatus('Is Admin: ' + isAdmin);
+  helper.printStatus('Auto Delete: ' + message.autoDelete);
+  helper.printStatus('Use Tracker GG: ' + useTrackerGG);
+  console.log('----------------------------------------------');
 
   updateServerInfo(message.guild.id, message.guild.name); // Create new server info and/or update last active time
 
   let apiSearchURL =
-    config.apiSearchBaseURL + "platform=" + server_platform + "&name=";
+    config.apiSearchBaseURL + 'platform=' + server_platform + '&name=';
 
   if (useTrackerGG) {
-    apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + "/";
+    apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + '/';
   }
 
   /***********************************
   // SERVER PREFIX
   ************************************/
-  if (command === "isac") {
+  if (command === 'isac') {
     if (args.length > 0) {
       if (isAdmin) {
-        if (args[0] == "prefix") {
+        if (args[0] == 'prefix') {
           if (args.length == 1) {
             message.channel
-              .send("The server prefix for ISAC is: " + prefix)
+              .send('The server prefix for ISAC is: ' + prefix)
               .then(function (msg) {
-                if (message.autoDelete) msg.delete({ timeout: 15000 });
+                if (message.autoDelete) msg.delete({timeout: 15000});
               });
           } else {
             if (args[1].length == 1) {
@@ -180,7 +162,7 @@ client.on("message", async function (message) {
               message.channel
                 .send("The server's prefix for ISAC is now: " + args[1])
                 .then(function (msg) {
-                  if (message.autoDelete) msg.delete({ timeout: 15000 });
+                  if (message.autoDelete) msg.delete({timeout: 15000});
                 });
             } else {
               message.channel
@@ -190,7 +172,7 @@ client.on("message", async function (message) {
                     " failed. You can only set the server's prefix to a single character. Example: !, @, #, $",
                 )
                 .then(function (msg) {
-                  if (message.autoDelete) msg.delete({ timeout: 15000 });
+                  if (message.autoDelete) msg.delete({timeout: 15000});
                 });
             }
           }
@@ -204,51 +186,51 @@ client.on("message", async function (message) {
   // FANCY CODE
   ************************************/
 
-  if (command === "obey") {
+  if (command === 'obey') {
     if (owner) {
-      message.channel.send("hi my owner! :) sachii#0001");
+      message.channel.send('hi my owner! :) sachii#0001');
       return;
     } else {
-      message.channel.send("you are not my owner!");
+      message.channel.send('you are not my owner!');
       return;
     }
   }
 
-  if (command === "status") {
-    message.channel.send("im online :)");
+  if (command === 'status') {
+    message.channel.send('im online :)');
   }
 
   /***********************************
   // AUTO DELETE
   ************************************/
-  if (command === "autodelete") {
+  if (command === 'autodelete') {
     if (args.length > 0) {
       if (isAdmin) {
-        if (args[0] == "on") {
-          pool.query("UPDATE servers SET auto_delete = 1 WHERE server_id = ?", [
+        if (args[0] == 'on') {
+          pool.query('UPDATE servers SET auto_delete = 1 WHERE server_id = ?', [
             message.guild.id,
           ]);
           message.autoDelete = true;
-          message.delete({ timeout: 15000 });
+          message.delete({timeout: 15000});
           message.channel
-            .send("Auto deleting of messages is now enabled (15 seconds)")
+            .send('Auto deleting of messages is now enabled (15 seconds)')
             .then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
           return;
-        } else if (args[0] == "off") {
-          pool.query("UPDATE servers SET auto_delete = 0 WHERE server_id = ?", [
+        } else if (args[0] == 'off') {
+          pool.query('UPDATE servers SET auto_delete = 0 WHERE server_id = ?', [
             message.guild.id,
           ]);
           message.autoDelete = false;
-          message.channel.send("Auto deleting of messages is now disabled");
+          message.channel.send('Auto deleting of messages is now disabled');
           return;
         }
       }
     }
 
     message.channel.send(getErrorMessage(8)).then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     });
     return;
   }
@@ -256,7 +238,7 @@ client.on("message", async function (message) {
   /*************************************************
   // CHANGE NICKNAMES OF USERS TO THEIR AGENT NAMES
   *************************************************/
-  if (command === "update_nicknames") {
+  if (command === 'update_nicknames') {
     let members = [];
     if (isAdmin) {
       await message.channel.guild.members.fetch().then(async function (guild) {
@@ -282,26 +264,26 @@ client.on("message", async function (message) {
 
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   await members[i].member
                     .setNickname(res[0].agent_name)
                     .then(function (member) {
                       console.log(
-                        "Updated nickname of: " +
+                        'Updated nickname of: ' +
                           member.displayName +
-                          " to " +
+                          ' to ' +
                           res[0].agent_name,
                       );
                       success.push(res[0].agent_name);
                     })
                     .catch(function (err) {
                       console.log(
-                        "Unable to update nickname of: " +
+                        'Unable to update nickname of: ' +
                           members[i].member.displayName,
                       );
-                      console.log("Reason: " + err.message + "\n");
+                      console.log('Reason: ' + err.message + '\n');
                       failure.push(res[0].agent_name);
                     });
                 }
@@ -311,14 +293,14 @@ client.on("message", async function (message) {
           if (success.length > 0)
             message.channel
               .send(
-                "Successfully updated nicknames in " +
+                'Successfully updated nicknames in ' +
                   message.guild.name +
-                  ": `" +
-                  success.join(", ") +
-                  "`",
+                  ': `' +
+                  success.join(', ') +
+                  '`',
               )
               .then(function (msg) {
-                if (message.autoDelete) msg.delete({ timeout: 15000 });
+                if (message.autoDelete) msg.delete({timeout: 15000});
               });
         }
       });
@@ -329,27 +311,27 @@ client.on("message", async function (message) {
   /*************************************************
   // CLAN COMMANDS
   *************************************************/
-  if (command === "clan") {
+  if (command === 'clan') {
     if (isAdmin) {
       if (args.length > 0) {
-        if (args[0] == "removerole") {
+        if (args[0] == 'removerole') {
           pool.query(
-            "UPDATE servers SET clan_role_id = ? WHERE server_id = ?",
-            ["", message.guild.id],
+            'UPDATE servers SET clan_role_id = ? WHERE server_id = ?',
+            ['', message.guild.id],
           );
           message.channel
-            .send("Clan role has been removed.")
+            .send('Clan role has been removed.')
             .then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
         }
 
-        if (args[0] == "role") {
+        if (args[0] == 'role') {
           if (args.length > 1) {
             let role_arg = original_message
               .slice(prefix.length)
-              .replace(command, "")
-              .replace(args[0], "")
+              .replace(command, '')
+              .replace(args[0], '')
               .trim(); // args without lowercase and space in between
             let role_search = message.guild.roles.cache.filter(function (role) {
               return role.name == role_arg;
@@ -360,24 +342,24 @@ client.on("message", async function (message) {
                 return role.id;
               })[0];
               pool.query(
-                "UPDATE servers SET clan_role_id = ? WHERE server_id = ?",
+                'UPDATE servers SET clan_role_id = ? WHERE server_id = ?',
                 [clan_role_id, message.guild.id],
               );
               message.channel
-                .send("Clan role has been set to " + role_arg + ".")
+                .send('Clan role has been set to ' + role_arg + '.')
                 .then(function (msg) {
-                  if (message.autoDelete) msg.delete({ timeout: 15000 });
+                  if (message.autoDelete) msg.delete({timeout: 15000});
                 });
             } else {
               message.channel
-                .send(getErrorMessage(7, { role: role_arg }))
+                .send(getErrorMessage(7, {role: role_arg}))
                 .then(function (msg) {
-                  if (message.autoDelete) msg.delete({ timeout: 15000 });
+                  if (message.autoDelete) msg.delete({timeout: 15000});
                 });
             }
           } else {
             pool
-              .query("SELECT * FROM servers WHERE server_id = ?", [
+              .query('SELECT * FROM servers WHERE server_id = ?', [
                 message.guild.id,
               ])
               .then(function (res) {
@@ -392,20 +374,19 @@ client.on("message", async function (message) {
                     if (current_clan_role) {
                       message.channel
                         .send(
-                          "The current clan role is set to " +
+                          'The current clan role is set to ' +
                             current_clan_role.values().next().value.name +
-                            ". !rank will only display results where members are of this role or have been manually added.",
+                            '. !rank will only display results where members are of this role or have been manually added.',
                         )
                         .then(function (msg) {
-                          if (message.autoDelete)
-                            msg.delete({ timeout: 15000 });
+                          if (message.autoDelete) msg.delete({timeout: 15000});
                         });
                     }
                   } else {
                     message.channel
-                      .send("No clan role has been set.")
+                      .send('No clan role has been set.')
                       .then(function (msg) {
-                        if (message.autoDelete) msg.delete({ timeout: 15000 });
+                        if (message.autoDelete) msg.delete({timeout: 15000});
                       });
                   }
                 }
@@ -414,15 +395,15 @@ client.on("message", async function (message) {
         }
 
         // list manually added clan agents
-        if (args[0] == "list") {
+        if (args[0] == 'list') {
           manual_agents = await pool
-            .query("SELECT * FROM server_agents WHERE server_id = ?", [
+            .query('SELECT * FROM server_agents WHERE server_id = ?', [
               message.guild.id,
             ])
             .then(function (res) {
               if (res.length > 0) {
                 return res.map(function (res) {
-                  return { id: res.agent_id, name: res.agent_name };
+                  return {id: res.agent_id, name: res.agent_name};
                 });
               } else {
                 return [];
@@ -435,41 +416,41 @@ client.on("message", async function (message) {
             });
 
             let embed = new Discord.MessageEmbed()
-              .setTitle("Manually added agents for " + message.guild.name)
-              .setColor("#FF6D10")
+              .setTitle('Manually added agents for ' + message.guild.name)
+              .setColor('#FF6D10')
               .setFooter(embedFooter, embedFooterImg);
 
-            embed.setDescription(manual_agent_names.sort().join("\n"));
+            embed.setDescription(manual_agent_names.sort().join('\n'));
 
             message.channel.send(embed).then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
           } else {
             message.channel
-              .send("No agents have been manually added for this clan yet.")
+              .send('No agents have been manually added for this clan yet.')
               .then(function (msg) {
-                if (message.autoDelete) msg.delete({ timeout: 15000 });
+                if (message.autoDelete) msg.delete({timeout: 15000});
               });
           }
         }
 
-        if (args[0] == "add") {
+        if (args[0] == 'add') {
           if (args.length > 1) {
             let agent_name_arg = original_message
               .slice(prefix.length)
-              .replace(command, "")
-              .replace(args[0], "")
+              .replace(command, '')
+              .replace(args[0], '')
               .trim(); // args without lowercase and space in between
 
             if (useTrackerGG) {
               apiSearchURL =
-                config.apiSearchBaseURL_TGG + server_platform + "/";
+                config.apiSearchBaseURL_TGG + server_platform + '/';
             } else {
               apiSearchURL =
                 config.apiSearchBaseURL +
-                "platform=" +
+                'platform=' +
                 server_platform +
-                "&name=";
+                '&name=';
             }
 
             // check if agent exists first
@@ -488,30 +469,30 @@ client.on("message", async function (message) {
 
                     await pool
                       .query(
-                        "INSERT INTO server_agents (server_id, agent_name, agent_id, type, added_by_id, added_by_username, date_added) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE added_by_id = ?, added_by_username = ?, date_added = ?",
+                        'INSERT INTO server_agents (server_id, agent_name, agent_id, type, added_by_id, added_by_username, date_added) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE added_by_id = ?, added_by_username = ?, date_added = ?',
                         [
                           message.guild.id,
                           agent_name,
                           uplay_id,
-                          "add",
+                          'add',
                           message.author.id,
                           message.author.username,
-                          moment().format("YYYY-M-D HH:mm:ss"),
+                          moment().format('YYYY-M-D HH:mm:ss'),
                           message.author.id,
                           message.author.username,
-                          moment().format("YYYY-M-D HH:mm:ss"),
+                          moment().format('YYYY-M-D HH:mm:ss'),
                         ],
                       )
                       .then(async function (res) {
                         message.channel
                           .send(
-                            "Agent " +
+                            'Agent ' +
                               agent_name_arg +
-                              " manually added to clan list.",
+                              ' manually added to clan list.',
                           )
                           .then(function (msg) {
                             if (message.autoDelete)
-                              msg.delete({ timeout: 15000 });
+                              msg.delete({timeout: 15000});
                           });
                       });
                   } else if (useTrackerGG && response.data.data) {
@@ -521,30 +502,30 @@ client.on("message", async function (message) {
 
                     await pool
                       .query(
-                        "INSERT INTO server_agents (server_id, agent_name, agent_id, type, added_by_id, added_by_username, date_added) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE added_by_id = ?, added_by_username = ?, date_added = ?",
+                        'INSERT INTO server_agents (server_id, agent_name, agent_id, type, added_by_id, added_by_username, date_added) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE added_by_id = ?, added_by_username = ?, date_added = ?',
                         [
                           message.guild.id,
                           agent_name,
                           uplay_id,
-                          "add",
+                          'add',
                           message.author.id,
                           message.author.username,
-                          moment().format("YYYY-M-D HH:mm:ss"),
+                          moment().format('YYYY-M-D HH:mm:ss'),
                           message.author.id,
                           message.author.username,
-                          moment().format("YYYY-M-D HH:mm:ss"),
+                          moment().format('YYYY-M-D HH:mm:ss'),
                         ],
                       )
                       .then(async function (res) {
                         message.channel
                           .send(
-                            "Agent " +
+                            'Agent ' +
                               agent_name_arg +
-                              " manually added to clan list.",
+                              ' manually added to clan list.',
                           )
                           .then(function (msg) {
                             if (message.autoDelete)
-                              msg.delete({ timeout: 15000 });
+                              msg.delete({timeout: 15000});
                           });
                       });
                   } else {
@@ -556,7 +537,7 @@ client.on("message", async function (message) {
                         }),
                       )
                       .then(function (msg) {
-                        if (message.autoDelete) msg.delete({ timeout: 15000 });
+                        if (message.autoDelete) msg.delete({timeout: 15000});
                       });
                   }
                 }
@@ -564,38 +545,38 @@ client.on("message", async function (message) {
           }
         }
 
-        if (args[0] == "remove") {
+        if (args[0] == 'remove') {
           if (args.length > 1) {
             let agent_name_arg = original_message
               .slice(prefix.length)
-              .replace(command, "")
-              .replace(args[0], "")
+              .replace(command, '')
+              .replace(args[0], '')
               .trim(); // args without lowercase and space in between
             pool
               .query(
-                "DELETE FROM server_agents WHERE server_id = ? AND agent_name = ?",
+                'DELETE FROM server_agents WHERE server_id = ? AND agent_name = ?',
                 [message.guild.id, agent_name_arg],
               )
               .then(function (res) {
                 if (res.affectedRows > 0) {
                   message.channel
                     .send(
-                      "Manually added clan agent " +
+                      'Manually added clan agent ' +
                         agent_name_arg +
-                        " removed.",
+                        ' removed.',
                     )
                     .then(function (msg) {
-                      if (message.autoDelete) msg.delete({ timeout: 15000 });
+                      if (message.autoDelete) msg.delete({timeout: 15000});
                     });
                 } else {
                   message.channel
                     .send(
-                      "Error: Unable to locate manually added clan agent by the name of " +
+                      'Error: Unable to locate manually added clan agent by the name of ' +
                         agent_name_arg +
-                        ".",
+                        '.',
                     )
                     .then(function (msg) {
-                      if (message.autoDelete) msg.delete({ timeout: 15000 });
+                      if (message.autoDelete) msg.delete({timeout: 15000});
                     });
                 }
               });
@@ -604,16 +585,16 @@ client.on("message", async function (message) {
       }
     } else
       message.author
-        .send(getErrorMessage(5, { server_name: message.channel.guild }))
+        .send(getErrorMessage(5, {server_name: message.channel.guild}))
         .then(function (msg) {
-          if (message.autoDelete) msg.delete({ timeout: 15000 });
+          if (message.autoDelete) msg.delete({timeout: 15000});
         });
   }
 
   /*************************************************
   // HELP COMMANDS
   *************************************************/
-  if (command === "help" || command === "commands") {
+  if (command === 'help' || command === 'commands') {
     message.author.send(config.helpTxt);
     return;
   }
@@ -621,7 +602,7 @@ client.on("message", async function (message) {
   /*************************************************
   // SET DEFAULT PLATFORM FOR SERVER
   *************************************************/
-  if (command === "platform") {
+  if (command === 'platform') {
     if (args.length == 0) {
       message.channel
         .send(
@@ -629,7 +610,7 @@ client.on("message", async function (message) {
             platformsMap[server_platform],
         )
         .then(function (msg) {
-          if (message.autoDelete) msg.delete({ timeout: 15000 });
+          if (message.autoDelete) msg.delete({timeout: 15000});
         });
       return;
     }
@@ -639,13 +620,13 @@ client.on("message", async function (message) {
         if (platforms.includes(args[0])) {
           await pool
             .query(
-              "INSERT INTO platforms (server_id, platform, date_added) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE platform = ?, date_added = ?",
+              'INSERT INTO platforms (server_id, platform, date_added) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE platform = ?, date_added = ?',
               [
                 message.guild.id,
                 args[0],
-                moment().format("YYYY-M-D HH:mm:ss"),
+                moment().format('YYYY-M-D HH:mm:ss'),
                 args[0],
-                moment().format("YYYY-M-D HH:mm:ss"),
+                moment().format('YYYY-M-D HH:mm:ss'),
               ],
             )
             .then(async function (res) {
@@ -655,19 +636,19 @@ client.on("message", async function (message) {
                     platformsMap[args[0]],
                 )
                 .then(function (msg) {
-                  if (message.autoDelete) msg.delete({ timeout: 15000 });
+                  if (message.autoDelete) msg.delete({timeout: 15000});
                 });
             });
         } else {
           message.channel.send(getErrorMessage(4)).then(function (msg) {
-            if (message.autoDelete) msg.delete({ timeout: 15000 });
+            if (message.autoDelete) msg.delete({timeout: 15000});
           });
         }
       } else {
         message.author
-          .send(getErrorMessage(5, { server_name: message.channel.guild }))
+          .send(getErrorMessage(5, {server_name: message.channel.guild}))
           .then(function (msg) {
-            if (message.autoDelete) msg.delete({ timeout: 15000 });
+            if (message.autoDelete) msg.delete({timeout: 15000});
           });
       }
     }
@@ -676,20 +657,20 @@ client.on("message", async function (message) {
   /*************************************************
   // REGISTER AGENT ID TO DISCORD USER
   *************************************************/
-  if (command === "register") {
+  if (command === 'register') {
     if (args.length > 0) {
-      let username = args.join(" ");
+      let username = args.join(' ');
 
       // specific platform so doesn't use default server's
       if (platforms.includes(args[0])) {
-        username = args.slice(1).join(" ");
+        username = args.slice(1).join(' ');
         server_platform = args[0];
 
         if (useTrackerGG) {
-          apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + "/";
+          apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + '/';
         } else {
           apiSearchURL =
-            config.apiSearchBaseURL + "platform=" + server_platform + "&name=";
+            config.apiSearchBaseURL + 'platform=' + server_platform + '&name=';
         }
       }
 
@@ -709,24 +690,24 @@ client.on("message", async function (message) {
 
               await pool
                 .query(
-                  "INSERT INTO users (user_id, uplay_id, agent_name, platform, date_added) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uplay_id = ?, agent_name = ?, platform = ?, date_added = ?",
+                  'INSERT INTO users (user_id, uplay_id, agent_name, platform, date_added) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uplay_id = ?, agent_name = ?, platform = ?, date_added = ?',
                   [
                     message.author.id,
                     uplay_id,
                     agent_name,
                     server_platform,
-                    moment().format("YYYY-M-D HH:mm:ss"),
+                    moment().format('YYYY-M-D HH:mm:ss'),
                     uplay_id,
                     agent_name,
                     server_platform,
-                    moment().format("YYYY-M-D HH:mm:ss"),
+                    moment().format('YYYY-M-D HH:mm:ss'),
                   ],
                 )
                 .then(async function (res) {
                   message.channel
-                    .send("User <-> Agent registered. Fetching Agent stats.")
+                    .send('User <-> Agent registered. Fetching Agent stats.')
                     .then(function (msg) {
-                      if (message.autoDelete) msg.delete({ timeout: 15000 });
+                      if (message.autoDelete) msg.delete({timeout: 15000});
                     });
                   playerData = await getPlayerData(uplay_id);
                   printAgentStat(message, playerData);
@@ -738,24 +719,24 @@ client.on("message", async function (message) {
 
               await pool
                 .query(
-                  "INSERT INTO users (user_id, uplay_id, agent_name, platform, date_added) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uplay_id = ?, agent_name = ?, platform = ?, date_added = ?",
+                  'INSERT INTO users (user_id, uplay_id, agent_name, platform, date_added) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE uplay_id = ?, agent_name = ?, platform = ?, date_added = ?',
                   [
                     message.author.id,
                     uplay_id,
                     agent_name,
                     server_platform,
-                    moment().format("YYYY-M-D HH:mm:ss"),
+                    moment().format('YYYY-M-D HH:mm:ss'),
                     uplay_id,
                     agent_name,
                     server_platform,
-                    moment().format("YYYY-M-D HH:mm:ss"),
+                    moment().format('YYYY-M-D HH:mm:ss'),
                   ],
                 )
                 .then(async function (res) {
                   message.channel
-                    .send("User <-> Agent registered. Fetching Agent stats.")
+                    .send('User <-> Agent registered. Fetching Agent stats.')
                     .then(function (msg) {
-                      if (message.autoDelete) msg.delete({ timeout: 15000 });
+                      if (message.autoDelete) msg.delete({timeout: 15000});
                     });
                   playerData = await getPlayerData(
                     uplay_id,
@@ -773,7 +754,7 @@ client.on("message", async function (message) {
                   }),
                 )
                 .then(function (msg) {
-                  if (message.autoDelete) msg.delete({ timeout: 15000 });
+                  if (message.autoDelete) msg.delete({timeout: 15000});
                 });
             }
           }
@@ -788,28 +769,28 @@ client.on("message", async function (message) {
               }),
             )
             .then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
         });
       return;
     }
 
     message.channel.send(getErrorMessage(2)).then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     });
   }
 
   /*************************************************
   // UNREGISTER AGENT ID
   *************************************************/
-  if (command === "unregister") {
+  if (command === 'unregister') {
     await pool
-      .query("DELETE FROM users WHERE user_id = ?", [message.author.id])
+      .query('DELETE FROM users WHERE user_id = ?', [message.author.id])
       .then(async function (res) {
         message.channel
-          .send("User <-> Agent link removed.")
+          .send('User <-> Agent link removed.')
           .then(function (msg) {
-            if (message.autoDelete) msg.delete({ timeout: 15000 });
+            if (message.autoDelete) msg.delete({timeout: 15000});
           });
         return;
       });
@@ -818,15 +799,15 @@ client.on("message", async function (message) {
   /*************************************************
   // GET PLAYER INFO
   *************************************************/
-  if (["agent", "weapons", "pve", "dz", "darkzone", "exp"].includes(command)) {
+  if (['agent', 'weapons', 'pve', 'dz', 'darkzone', 'exp'].includes(command)) {
     if (args.length == 0) {
       // query DB and checks if user has registered aka linked discord ID to uplay ID else send message prompting to register
       await pool
-        .query("SELECT * FROM users WHERE user_id = ?", [message.author.id])
+        .query('SELECT * FROM users WHERE user_id = ?', [message.author.id])
         .then(async function (res) {
           if (res.length == 0) {
             message.channel.send(getErrorMessage(2)).then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
           } else {
             uplay_id = res[0].uplay_id;
@@ -838,7 +819,7 @@ client.on("message", async function (message) {
     }
 
     if (args.length > 0) {
-      let username = args.join(" ");
+      let username = args.join(' ');
 
       // @mentioneduser id instead of agent name
       let isMentionedUser = false;
@@ -858,7 +839,7 @@ client.on("message", async function (message) {
               }),
             )
             .then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
           return;
         }
@@ -867,19 +848,19 @@ client.on("message", async function (message) {
       // specific platform so doesn't use default server's
       if (platforms.includes(args[0])) {
         server_platform = args[0];
-        username = isMentionedUser ? username : args.slice(1).join(" ");
+        username = isMentionedUser ? username : args.slice(1).join(' ');
 
         if (useTrackerGG) {
-          apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + "/";
+          apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + '/';
         } else {
           apiSearchURL =
-            config.apiSearchBaseURL + "platform=" + server_platform + "&name=";
+            config.apiSearchBaseURL + 'platform=' + server_platform + '&name=';
         }
       }
 
       // search accounts
       if (useTrackerGG) {
-        playerData = await getPlayerData("", server_platform, username);
+        playerData = await getPlayerData('', server_platform, username);
 
         if (lodash.isEmpty(playerData)) {
           message.channel
@@ -890,12 +871,12 @@ client.on("message", async function (message) {
               }),
             )
             .then(function (msg) {
-              if (message.autoDelete) msg.delete({ timeout: 15000 });
+              if (message.autoDelete) msg.delete({timeout: 15000});
             });
         }
       } else {
         helper.printStatus(
-          "API Call @ Search Account: " + apiSearchURL + username,
+          'API Call @ Search Account: ' + apiSearchURL + username,
         );
 
         await axios
@@ -915,7 +896,7 @@ client.on("message", async function (message) {
                     }),
                   )
                   .then(function (msg) {
-                    if (message.autoDelete) msg.delete({ timeout: 15000 });
+                    if (message.autoDelete) msg.delete({timeout: 15000});
                   });
               }
             }
@@ -930,8 +911,8 @@ client.on("message", async function (message) {
   /*************************************************
   // PRINT AGENT SUMMARY
   *************************************************/
-  if (command === "agent") {
-    if (lodash.isEmpty(playerData) == false) {
+  if (command === 'agent') {
+    if (!isEmpty(playerData)) {
       printAgentStat(message, playerData);
       return;
     }
@@ -940,8 +921,8 @@ client.on("message", async function (message) {
   /*************************************************
   // PRINT WEAPON USAGE
   *************************************************/
-  if (command === "weapons") {
-    if (lodash.isEmpty(playerData) == false) {
+  if (command === 'weapons') {
+    if (!isEmpty(playerData)) {
       printWeaponStat(message, playerData);
       return;
     }
@@ -950,8 +931,8 @@ client.on("message", async function (message) {
   /*************************************************
   // PRINT PVE DATA
   *************************************************/
-  if (command === "pve") {
-    if (lodash.isEmpty(playerData) == false) {
+  if (command === 'pve') {
+    if (!isEmpty(playerData)) {
       printPVEStat(message, playerData);
       return;
     }
@@ -960,8 +941,8 @@ client.on("message", async function (message) {
   /*************************************************
   // PRINT DZ DATA
   *************************************************/
-  if (command === "dz" || command === "darkzone") {
-    if (lodash.isEmpty(playerData) == false) {
+  if (command === 'dz' || command === 'darkzone') {
+    if (!isEmpty(playerData)) {
       printDZStat(message, playerData);
       return;
     }
@@ -970,8 +951,8 @@ client.on("message", async function (message) {
   /*************************************************
   // PRINT EXP
   *************************************************/
-  if (command === "exp") {
-    if (lodash.isEmpty(playerData) == false) {
+  if (command === 'exp') {
+    if (!isEmpty(playerData)) {
       printAgentEXP(message, playerData);
       return;
     }
@@ -980,7 +961,7 @@ client.on("message", async function (message) {
   /*************************************************
   // PRINT SERVER'S AGENTS DATA
   *************************************************/
-  if (command === "rank") {
+  if (command === 'rank') {
     if (args.length > 0) {
       if (rankedData.includes(args[0])) {
         rankGet(message, args[0], server_platform);
@@ -989,7 +970,7 @@ client.on("message", async function (message) {
     }
 
     message.channel.send(getErrorMessage(3)).then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     });
   }
 });
@@ -998,7 +979,7 @@ client.on("message", async function (message) {
 async function rankGet(message, type, server_platform) {
   await message.channel.guild.members.fetch().then(async function (guild) {
     let clan_role_id = await pool
-      .query("SELECT * FROM servers WHERE server_id = ?", [message.guild.id])
+      .query('SELECT * FROM servers WHERE server_id = ?', [message.guild.id])
       .then(function (res) {
         if (res.length > 0)
           return res[0].clan_role_id ? res[0].clan_role_id : null;
@@ -1020,7 +1001,7 @@ async function rankGet(message, type, server_platform) {
           );
         })
         .map(function (member) {
-          return { id: member.user.id, username: member.user.username };
+          return {id: member.user.id, username: member.user.username};
         });
     else
       members = message.guild.members.cache
@@ -1028,13 +1009,13 @@ async function rankGet(message, type, server_platform) {
           return member.user.bot === false;
         })
         .map(function (member) {
-          return { id: member.user.id, username: member.user.username };
+          return {id: member.user.id, username: member.user.username};
         });
 
     // Manually added agents
     if (useTrackerGG) {
       manual_agents = await pool
-        .query("SELECT * FROM server_agents WHERE server_id = ?", [
+        .query('SELECT * FROM server_agents WHERE server_id = ?', [
           message.guild.id,
         ])
         .then(function (res) {
@@ -1048,7 +1029,7 @@ async function rankGet(message, type, server_platform) {
         });
     } else {
       manual_agents = await pool
-        .query("SELECT * FROM server_agents WHERE server_id = ?", [
+        .query('SELECT * FROM server_agents WHERE server_id = ?', [
           message.guild.id,
         ])
         .then(function (res) {
@@ -1066,11 +1047,11 @@ async function rankGet(message, type, server_platform) {
 
     if (members.length > 0) {
       switch (type) {
-        case "playtime":
+        case 'playtime':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1091,10 +1072,10 @@ async function rankGet(message, type, server_platform) {
                       ranked_value: Number(playerData.timeplayed_total),
                       display_value:
                         lodash.round(playerData.timeplayed_total / 3600) +
-                        " hour" +
+                        ' hour' +
                         (lodash.round(playerData.timeplayed_total / 3600) > 1
-                          ? "s"
-                          : ""),
+                          ? 's'
+                          : ''),
                     });
                   }
                 }
@@ -1117,20 +1098,20 @@ async function rankGet(message, type, server_platform) {
                 ranked_value: Number(playerData.timeplayed_total),
                 display_value:
                   lodash.round(playerData.timeplayed_total / 3600) +
-                  " hour" +
+                  ' hour' +
                   (lodash.round(playerData.timeplayed_total / 3600) > 1
-                    ? "s"
-                    : ""),
+                    ? 's'
+                    : ''),
               });
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1138,14 +1119,14 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "Playtime");
+            printRankedResult(message, results, 'desc', 'Playtime');
           }
           break;
-        case "ecredit":
+        case 'ecredit':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1190,12 +1171,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1203,14 +1184,14 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "E-Credit Balance");
+            printRankedResult(message, results, 'desc', 'E-Credit Balance');
           }
           break;
-        case "gearscore":
+        case 'gearscore':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1255,12 +1236,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1268,14 +1249,14 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "Gear Score");
+            printRankedResult(message, results, 'desc', 'Gear Score');
           }
           break;
-        case "commendation":
+        case 'commendation':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1320,12 +1301,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1333,16 +1314,16 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "Commendations");
+            printRankedResult(message, results, 'desc', 'Commendations');
           }
           break;
 
-        case "clanexp":
-        case "cxp":
+        case 'clanexp':
+        case 'cxp':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1387,12 +1368,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1400,16 +1381,16 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "Clan EXP");
+            printRankedResult(message, results, 'desc', 'Clan EXP');
           }
           break;
 
-        case "clanexp24h":
-        case "cxp24h":
+        case 'clanexp24h':
+        case 'cxp24h':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1462,12 +1443,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1475,16 +1456,16 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "24 Hours Clan EXP");
+            printRankedResult(message, results, 'desc', '24 Hours Clan EXP');
           }
           break;
 
-        case "clanexp7d":
-        case "cxp7d":
+        case 'clanexp7d':
+        case 'cxp7d':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1537,12 +1518,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1550,16 +1531,16 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "7 Days Clan EXP");
+            printRankedResult(message, results, 'desc', '7 Days Clan EXP');
           }
           break;
 
-        case "clanexp30d":
-        case "cxp30d":
+        case 'clanexp30d':
+        case 'cxp30d':
           message.channel.startTyping();
           for (var i = 0; i < members.length; i++) {
             await pool
-              .query("SELECT * FROM users WHERE user_id = ?", [members[i].id])
+              .query('SELECT * FROM users WHERE user_id = ?', [members[i].id])
               .then(async function (res) {
                 if (res.length > 0) {
                   uplay_id = res[0].uplay_id;
@@ -1612,12 +1593,12 @@ async function rankGet(message, type, server_platform) {
             } else {
               if (useTrackerGG)
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
               else
                 pool.query(
-                  "DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?",
+                  'DELETE FROM server_agents WHERE agent_name = ? AND server_id = ?',
                   [manual_agents[i], message.guild.id],
                 );
             }
@@ -1625,7 +1606,7 @@ async function rankGet(message, type, server_platform) {
           message.channel.stopTyping();
 
           if (results.length > 0) {
-            printRankedResult(message, results, "desc", "30 Days Clan EXP");
+            printRankedResult(message, results, 'desc', '30 Days Clan EXP');
           }
           break;
       }
@@ -1635,13 +1616,13 @@ async function rankGet(message, type, server_platform) {
 
 function printRankedResult(message, results, order, title) {
   let limit = 10;
-  let hashid = new Hashids("ISAC_BOT", 6, "abcdefghijklmnopqrstuvwxyz"); // pad to length 10
+  let hashid = new Hashids('ISAC_BOT', 6, 'abcdefghijklmnopqrstuvwxyz'); // pad to length 10
   let hash = hashid.encode(message.logCommandID);
-  let url = "https://results.isacbot.gg/?hash=" + hash;
+  let url = 'https://results.isacbot.gg/?hash=' + hash;
   let showMore = results.length > limit ? true : false;
 
   display_results = lodash
-    .sortBy(results, ["ranked_value"])
+    .sortBy(results, ['ranked_value'])
     .reverse()
     .slice(0, limit);
 
@@ -1657,7 +1638,7 @@ function printRankedResult(message, results, order, title) {
     ) {
       display_results[i].skip = true;
       pool.query(
-        "DELETE FROM server_agents WHERE server_id = ? AND agent_name = ?",
+        'DELETE FROM server_agents WHERE server_id = ? AND agent_name = ?',
         [message.guild.id, display_results[i].uplay_id],
       );
     } else display_results[i].skip = false;
@@ -1670,12 +1651,12 @@ function printRankedResult(message, results, order, title) {
 
   let embed = new Discord.MessageEmbed()
     .setTitle(
-      "The Division 2 - Server Ranking for " + message.channel.guild.name,
+      'The Division 2 - Server Ranking for ' + message.channel.guild.name,
     )
-    .setColor("#339af0")
+    .setColor('#339af0')
     .setFooter(embedFooter, embedFooterImg);
 
-  let rankingStr = "";
+  let rankingStr = '';
   let manualAgentExist = false;
 
   for (var i = 0; i < display_results.length; i++) {
@@ -1683,33 +1664,33 @@ function printRankedResult(message, results, order, title) {
       rankingStr +=
         i +
         1 +
-        ". " +
-        display_results[i].uplay_id.replace("_", "\\_") +
-        "\\*\\*\\* _(" +
+        '. ' +
+        display_results[i].uplay_id.replace('_', '\\_') +
+        '\\*\\*\\* _(' +
         display_results[i].display_value +
-        ")_\n";
+        ')_\n';
       manualAgentExist = true;
     } else
       rankingStr +=
         i +
         1 +
-        ". " +
-        display_results[i].uplay_id.replace("_", "\\_") +
-        " _(" +
+        '. ' +
+        display_results[i].uplay_id.replace('_', '\\_') +
+        ' _(' +
         display_results[i].display_value +
-        ")_ <@" +
+        ')_ <@' +
         display_results[i].user_id +
-        ">\n";
+        '>\n';
   }
 
   if (showMore) {
-    rankingStr += "\nto see full results ";
+    rankingStr += '\nto see full results ';
     embed.setURL(url);
-    rankingStr += "[**click here.**](" + url + ")";
+    rankingStr += '[**click here.**](' + url + ')';
   }
 
   if (manualAgentExist) {
-    rankingStr += "\n\\*\\*\\* indicates manually added agents.";
+    rankingStr += '\n\\*\\*\\* indicates manually added agents.';
   }
 
   embed.addField(title, rankingStr);
@@ -1717,7 +1698,7 @@ function printRankedResult(message, results, order, title) {
   message.channel
     .send(embed)
     .then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     })
     .catch(function (err) {
       if (err.code == 50013) {
@@ -1732,78 +1713,78 @@ function printRankedResult(message, results, order, title) {
 function printAgentStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle(
-      "The Division 2 - Agent Stats: " +
+      'The Division 2 - Agent Stats: ' +
         playerData.name +
-        " (" +
+        ' (' +
         playerData.platform +
-        ")",
+        ')',
     )
-    .setColor("#FF6D10")
+    .setColor('#FF6D10')
     .setThumbnail(message.author.avatarURL())
-    .addField("Level", playerData.level_pve, true)
-    .addField("DZ Rank", playerData.level_dz, true)
-    .addField("Conflict Rank", playerData.level_pvp, true)
+    .addField('Level', playerData.level_pve, true)
+    .addField('DZ Rank', playerData.level_dz, true)
+    .addField('Conflict Rank', playerData.level_pvp, true)
 
     .addField(
-      "Specialization",
+      'Specialization',
       lodash.capitalize(playerData.specialization),
       true,
     )
-    .addField("Gear Score", playerData.gearscore, true)
-    .addField("Items Looted", playerData.looted.toLocaleString(), true)
+    .addField('Gear Score', playerData.gearscore, true)
+    .addField('Items Looted', playerData.looted.toLocaleString(), true)
 
     .addField(
-      "PvE Playtime",
+      'PvE Playtime',
       lodash.round(playerData.timeplayed_pve / 3600) +
-        " hour" +
-        (lodash.round(playerData.timeplayed_pve / 3600) > 1 ? "s" : ""),
+        ' hour' +
+        (lodash.round(playerData.timeplayed_pve / 3600) > 1 ? 's' : ''),
       true,
     )
     .addField(
-      "DZ Playtime",
+      'DZ Playtime',
       lodash.round(playerData.timeplayed_dz / 3600) +
-        " hour" +
-        (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? "s" : ""),
+        ' hour' +
+        (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? 's' : ''),
       true,
     )
     .addField(
-      "PvP Playtime",
+      'PvP Playtime',
       lodash.round(playerData.timeplayed_pvp / 3600) +
-        " hour" +
-        (lodash.round(playerData.timeplayed_pvp / 3600) > 1 ? "s" : ""),
+        ' hour' +
+        (lodash.round(playerData.timeplayed_pvp / 3600) > 1 ? 's' : ''),
       true,
     )
 
     //.addField("DZ Rogue Playtime", lodash.round(playerData.timeplayed_rogue / 3600) + "h", true)
 
-    .addField("Total Kills", playerData.kills_total.toLocaleString(), true)
+    .addField('Total Kills', playerData.kills_total.toLocaleString(), true)
     .addField(
-      "Specialization Kills",
+      'Specialization Kills',
       playerData.kills_specialization.toLocaleString(),
       true,
     )
     .addField(
-      "Headshot Kills",
+      'Headshot Kills',
       playerData.kills_headshot.toLocaleString() +
-        " (" +
+        ' (' +
         lodash.round(
           (playerData.kills_headshot / playerData.kills_total) * 100,
         ) +
-        "%)",
+        '%)',
       true,
     )
     .addField(
-      "Skill Kills",
+      'Skill Kills',
       playerData.kills_skill.toLocaleString() +
-        " (" +
+        ' (' +
         lodash.round((playerData.kills_skill / playerData.kills_total) * 100) +
-        "%)",
+        '%)',
       true,
     )
 
-    .addField("Clan EXP", playerData.xp_clan.toLocaleString(), true)
-    .addField("Commendations", playerData.commendations.toLocaleString(), true)
-    .addField("E-Credits", playerData.ecredits.toLocaleString(), true)
+    .addField('Clan EXP', playerData.xp_clan.toLocaleString(), true)
+    .addField('Commendations', playerData.commendations.toLocaleString(), true)
+    .addField('E-Credits', playerData.ecredits.toLocaleString(), true)
 
     // .addField("Last Login (UTC)", moment.unix(playerData.lastlogin).utc().format('D MMM YYYY'), true)
 
@@ -1812,7 +1793,7 @@ function printAgentStat(message, playerData) {
   message.channel
     .send(embed)
     .then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     })
     .catch(function (err) {
       if (err.code == 50013) {
@@ -1827,30 +1808,30 @@ function printAgentStat(message, playerData) {
 async function printAgentEXP(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle(
-      "The Division 2 - Agent EXP: " +
+      'The Division 2 - Agent EXP: ' +
         playerData.name +
-        " (" +
+        ' (' +
         playerData.platform +
-        ")",
+        ')',
     )
-    .setColor("#FF6D10")
+    .setColor('#FF6D10')
     .setThumbnail(message.author.avatarURL())
-    .addField("Clan EXP", playerData.xp_clan.toLocaleString(), true)
-    .addField("PvE EXP", playerData.xp_ow.toLocaleString(), true)
-    .addField("Dark Zone EXP", playerData.xp_dz.toLocaleString(), true)
+    .addField('Clan EXP', playerData.xp_clan.toLocaleString(), true)
+    .addField('PvE EXP', playerData.xp_ow.toLocaleString(), true)
+    .addField('Dark Zone EXP', playerData.xp_dz.toLocaleString(), true)
 
     .addField(
-      "24h Clan EXP",
+      '24h Clan EXP',
       playerData.xp_clan_24h ? playerData.xp_clan_24h.toLocaleString() : 0,
       true,
     )
     .addField(
-      "7d Clan EXP",
+      '7d Clan EXP',
       playerData.xp_clan_7d ? playerData.xp_clan_7d.toLocaleString() : 0,
       true,
     )
     .addField(
-      "30d Clan EXP",
+      '30d Clan EXP',
       playerData.xp_clan_30d ? playerData.xp_clan_30d.toLocaleString() : 0,
       true,
     )
@@ -1860,7 +1841,7 @@ async function printAgentEXP(message, playerData) {
   message.channel
     .send(embed)
     .then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     })
     .catch(function (err) {
       if (err.code == 50013) {
@@ -1875,26 +1856,26 @@ async function printAgentEXP(message, playerData) {
 function printWeaponStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle(
-      "The Division 2 - Weapon Kills: " +
+      'The Division 2 - Weapon Kills: ' +
         playerData.name +
-        " (" +
+        ' (' +
         playerData.platform +
-        ")",
+        ')',
     )
-    .setColor("#FF6D10")
+    .setColor('#FF6D10')
     .setThumbnail(message.author.avatarURL())
-    .addField("Grenade", playerData.kills_wp_grenade.toLocaleString(), true)
-    .addField("Rifle", playerData.kills_wp_rifles.toLocaleString(), true)
-    .addField("Sidearm", playerData.kills_wp_pistol.toLocaleString(), true)
-    .addField("SMG", playerData.kills_wp_smg.toLocaleString(), true)
-    .addField("Shotgun", playerData.kills_wp_shotgun.toLocaleString(), true)
-    .addField("Turret", playerData.kills_turret.toLocaleString(), true)
+    .addField('Grenade', playerData.kills_wp_grenade.toLocaleString(), true)
+    .addField('Rifle', playerData.kills_wp_rifles.toLocaleString(), true)
+    .addField('Sidearm', playerData.kills_wp_pistol.toLocaleString(), true)
+    .addField('SMG', playerData.kills_wp_smg.toLocaleString(), true)
+    .addField('Shotgun', playerData.kills_wp_shotgun.toLocaleString(), true)
+    .addField('Turret', playerData.kills_turret.toLocaleString(), true)
     .setFooter(embedFooter, embedFooterImg);
 
   message.channel
     .send(embed)
     .then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     })
     .catch(function (err) {
       if (err.code == 50013) {
@@ -1909,66 +1890,66 @@ function printWeaponStat(message, playerData) {
 function printDZStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle(
-      "The Division 2 - Dark Zone Stats: " +
+      'The Division 2 - Dark Zone Stats: ' +
         playerData.name +
-        " (" +
+        ' (' +
         playerData.platform +
-        ")",
+        ')',
     )
-    .setColor("#A25EFF")
+    .setColor('#A25EFF')
     .setThumbnail(message.author.avatarURL())
-    .addField("Rank", playerData.level_dz, true)
-    .addField("EXP", playerData.xp_dz.toLocaleString(), true)
+    .addField('Rank', playerData.level_dz, true)
+    .addField('EXP', playerData.xp_dz.toLocaleString(), true)
     .addField(
-      "Playtime",
+      'Playtime',
       lodash.round(playerData.timeplayed_dz / 3600) +
-        " hour" +
-        (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? "s" : ""),
+        ' hour' +
+        (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? 's' : ''),
       true,
     )
     .addField(
-      "Rogue Playtime",
+      'Rogue Playtime',
       lodash.round(playerData.timeplayed_rogue / 3600) +
-        " hour" +
-        (lodash.round(playerData.timeplayed_rogue / 3600) > 1 ? "s" : ""),
+        ' hour' +
+        (lodash.round(playerData.timeplayed_rogue / 3600) > 1 ? 's' : ''),
       true,
     )
     .addField(
-      "Longest Time Rogue",
+      'Longest Time Rogue',
       lodash.round(playerData.maxtime_rogue / 60) +
-        " min" +
-        (lodash.round(playerData.maxtime_rogue / 60) > 1 ? "s" : ""),
+        ' min' +
+        (lodash.round(playerData.maxtime_rogue / 60) > 1 ? 's' : ''),
       true,
     )
     .addField(
-      "Total Players Killed (includes conflict)",
+      'Total Players Killed (includes conflict)',
       playerData.kills_pvp_dz_total.toLocaleString(),
       true,
     )
     .addField(
-      "Rogues Killed",
+      'Rogues Killed',
       playerData.kills_pvp_dz_rogue.toLocaleString(),
       true,
     )
     // mob kills
     .addField(
-      "Hyenas Killed",
+      'Hyenas Killed',
       playerData.kills_pve_dz_hyenas.toLocaleString(),
       true,
     )
     .addField(
-      "Outcasts Killed",
+      'Outcasts Killed',
       playerData.kills_pve_dz_outcasts.toLocaleString(),
       true,
     )
     //     .addField("Black Tusks Killed", playerData.kills_pve_dz_blacktusk.toLocaleString(), true)
     .addField(
-      "True Sons Killed",
+      'True Sons Killed',
       playerData.kills_pve_dz_truesons.toLocaleString(),
       true,
     )
     .addField(
-      "Elites Killed",
+      'Elites Killed',
       playerData.kills_pvp_elitebosses.toLocaleString(),
       true,
     )
@@ -1978,7 +1959,7 @@ function printDZStat(message, playerData) {
   message.channel
     .send(embed)
     .then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     })
     .catch(function (err) {
       if (err.code == 50013) {
@@ -1993,48 +1974,48 @@ function printDZStat(message, playerData) {
 function printPVEStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle(
-      "The Division 2 - PvE Stats: " +
+      'The Division 2 - PvE Stats: ' +
         playerData.name +
-        " (" +
+        ' (' +
         playerData.platform +
-        ")",
+        ')',
     )
-    .setColor("#34CFD5")
+    .setColor('#34CFD5')
     .setThumbnail(message.author.avatarURL())
-    .addField("Level", playerData.level_pve, true)
-    .addField("Gear Score", playerData.gearscore, true)
+    .addField('Level', playerData.level_pve, true)
+    .addField('Gear Score', playerData.gearscore, true)
     .addField(
-      "Specialization",
+      'Specialization',
       lodash.capitalize(playerData.specialization),
       true,
     )
-    .addField("EXP", playerData.xp_ow.toLocaleString(), true)
-    .addField("Items Looted", playerData.looted.toLocaleString(), true)
+    .addField('EXP', playerData.xp_ow.toLocaleString(), true)
+    .addField('Items Looted', playerData.looted.toLocaleString(), true)
     .addField(
-      "Playtime",
+      'Playtime',
       lodash.round(playerData.timeplayed_pve / 3600) +
-        " hour" +
-        (lodash.round(playerData.timeplayed_pve / 3600) > 1 ? "s" : ""),
+        ' hour' +
+        (lodash.round(playerData.timeplayed_pve / 3600) > 1 ? 's' : ''),
       true,
     )
     // mob kills
     .addField(
-      "Hyenas Killed",
+      'Hyenas Killed',
       playerData.kills_pve_hyenas.toLocaleString(),
       true,
     )
     .addField(
-      "Outcasts Killed",
+      'Outcasts Killed',
       playerData.kills_pve_outcasts.toLocaleString(),
       true,
     )
     .addField(
-      "Black Tusks Killed",
+      'Black Tusks Killed',
       playerData.kills_pve_blacktusk.toLocaleString(),
       true,
     )
     .addField(
-      "True Sons Killed",
+      'True Sons Killed',
       playerData.kills_pve_truesons.toLocaleString(),
       true,
     )
@@ -2044,7 +2025,7 @@ function printPVEStat(message, playerData) {
   message.channel
     .send(embed)
     .then(function (msg) {
-      if (message.autoDelete) msg.delete({ timeout: 15000 });
+      if (message.autoDelete) msg.delete({timeout: 15000});
     })
     .catch(function (err) {
       if (err.code == 50013) {
@@ -2058,33 +2039,33 @@ function printPVEStat(message, playerData) {
 
 function updateServerInfo(server_id, name) {
   pool.query(
-    "INSERT INTO servers (server_id, name, date_added, last_active) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, last_active = ?",
+    'INSERT INTO servers (server_id, name, date_added, last_active) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = ?, last_active = ?',
     [
       server_id,
       name,
-      moment().format("YYYY-M-D HH:mm:ss"),
-      moment().format("YYYY-M-D HH:mm:ss"),
+      moment().format('YYYY-M-D HH:mm:ss'),
+      moment().format('YYYY-M-D HH:mm:ss'),
       name,
-      moment().format("YYYY-M-D HH:mm:ss"),
+      moment().format('YYYY-M-D HH:mm:ss'),
     ],
   );
 }
 
 async function getServerPlatform(server_id) {
-  let platform = "uplay";
+  let platform = 'uplay';
 
   await pool
-    .query("SELECT * FROM platforms WHERE server_id = ?", [server_id])
+    .query('SELECT * FROM platforms WHERE server_id = ?', [server_id])
     .then(async function (res) {
       if (res.length == 0) {
         await pool.query(
-          "INSERT INTO platforms (server_id, platform, date_added) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE platform = ?, date_added = ?",
+          'INSERT INTO platforms (server_id, platform, date_added) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE platform = ?, date_added = ?',
           [
             server_id,
-            "uplay",
-            moment().format("YYYY-M-D HH:mm:ss"),
-            "uplay",
-            moment().format("YYYY-M-D HH:mm:ss"),
+            'uplay',
+            moment().format('YYYY-M-D HH:mm:ss'),
+            'uplay',
+            moment().format('YYYY-M-D HH:mm:ss'),
           ],
         );
       } else {
@@ -2099,10 +2080,10 @@ async function getServerPlatform(server_id) {
 }
 
 async function getMentionedUserAgentID(user) {
-  let username = "";
+  let username = '';
 
   await pool
-    .query("SELECT * FROM users WHERE user_id = ?", [user.id])
+    .query('SELECT * FROM users WHERE user_id = ?', [user.id])
     .then(async function (res) {
       if (res.length > 0) {
         username = res[0].agent_name;
@@ -2112,20 +2093,20 @@ async function getMentionedUserAgentID(user) {
   return username;
 }
 
-async function getPlayerData(uplay_id, platform = "", username = "") {
+async function getPlayerData(uplay_id, platform = '', username = '') {
   let playerData = {};
 
-  if (useTrackerGG && platform != "" && username != "") {
+  if (useTrackerGG && platform != '' && username != '') {
     helper.printStatus(
-      "API Call @ getPlayerData (TGG): " +
+      'API Call @ getPlayerData (TGG): ' +
         config.apiSearchBaseURL_TGG +
         platform +
-        "/" +
+        '/' +
         username,
     );
 
     await axios
-      .get(config.apiSearchBaseURL_TGG + platform + "/" + username)
+      .get(config.apiSearchBaseURL_TGG + platform + '/' + username)
       .then(async function (response) {
         if (response.status === 200) {
           if (response.data.data.segments.length > 0) {
@@ -2137,7 +2118,7 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
                 .specialization.displayValue
                 ? response.data.data.segments[0].stats.specialization
                     .displayValue
-                : "-",
+                : '-',
               /*avatar: response.data.data.platformInfo.avatarUrl,*/
               gearscore:
                 response.data.data.segments[0].stats.latestGearScore.value,
@@ -2273,9 +2254,9 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
             );
 
             if (exp_data.length > 1) {
-              let clan_exp = exp_data.map((e) => e.clan_exp);
-              let pve_exp = exp_data.map((e) => e.pve_exp);
-              let dz_exp = exp_data.map((e) => e.dz_exp);
+              let clan_exp = exp_data.map(e => e.clan_exp);
+              let pve_exp = exp_data.map(e => e.pve_exp);
+              let dz_exp = exp_data.map(e => e.dz_exp);
 
               if (exp_data.length >= 2) {
                 playerData.xp_clan_24h = getClanExp(clan_exp, 1);
@@ -2310,7 +2291,7 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
       });
   } else {
     helper.printStatus(
-      "API Call @ getPlayerData: " + config.apiPlayerURL + uplay_id,
+      'API Call @ getPlayerData: ' + config.apiPlayerURL + uplay_id,
     );
 
     await axios
@@ -2323,7 +2304,7 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
               extraData = JSON.parse(response.data.extra_data);
             } catch (err) {
               extraData = {};
-              helper.printStatus("Unable to parse extra data.");
+              helper.printStatus('Unable to parse extra data.');
             }
 
             playerData = {
@@ -2332,13 +2313,13 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
               platform: response.data.platform,
               specialization: response.data.specialization
                 ? response.data.specialization
-                : "-",
+                : '-',
               //             avatar: response.data.avatar_146,
               gearscore: response.data.gearscore,
               // lastlogin: response.data.utime, // Query time
               ecredits: response.data.ecredits, // Currency
-              commendations: extraData["LatestCommendationScore"]
-                ? extraData["LatestCommendationScore"]
+              commendations: extraData['LatestCommendationScore']
+                ? extraData['LatestCommendationScore']
                 : 0,
               xp_clan: response.data.xp_clan, // clan xp
               xp_clan_24h: null,
@@ -2375,8 +2356,8 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
               kills_pvp_namedbosses: response.data.kills_pvp_namedbosses,
               // pvp
               xp_pvp: response.data.xp_pvp,
-              level_pvp: extraData["LatestLevel.rankType.OrganizedPvpXP"]
-                ? extraData["LatestLevel.rankType.OrganizedPvpXP"]
+              level_pvp: extraData['LatestLevel.rankType.OrganizedPvpXP']
+                ? extraData['LatestLevel.rankType.OrganizedPvpXP']
                 : 0, // pvp but not dark zone, conflict?
               kills_pvp: response.data.kills_pvp,
               timeplayed_pvp: response.data.timeplayed_pvp, // pvp but not dark zone, conflict?
@@ -2397,9 +2378,9 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
               // weapons kills
               kills_wp_pistol: response.data.kills_wp_pistol,
               kills_wp_grenade: extraData[
-                "weaponNameKills.weaponName.player_grenade_landing"
+                'weaponNameKills.weaponName.player_grenade_landing'
               ]
-                ? extraData["weaponNameKills.weaponName.player_grenade_landing"]
+                ? extraData['weaponNameKills.weaponName.player_grenade_landing']
                 : 0,
               kills_wp_smg: response.data.kills_wp_smg,
               kills_wp_shotgun: response.data.kills_wp_shotgun,
@@ -2413,9 +2394,9 @@ async function getPlayerData(uplay_id, platform = "", username = "") {
             );
 
             if (exp_data.length > 1) {
-              let clan_exp = exp_data.map((e) => e.clan_exp);
-              let pve_exp = exp_data.map((e) => e.pve_exp);
-              let dz_exp = exp_data.map((e) => e.dz_exp);
+              let clan_exp = exp_data.map(e => e.clan_exp);
+              let pve_exp = exp_data.map(e => e.pve_exp);
+              let dz_exp = exp_data.map(e => e.dz_exp);
 
               if (exp_data.length >= 2) {
                 playerData.xp_clan_24h = getClanExp(clan_exp, 1);
@@ -2474,14 +2455,14 @@ function getClanExp(data, days) {
 }
 
 function getUpdateUserPlatforms() {
-  pool.query("SELECT * FROM users").then(function (response) {
+  pool.query('SELECT * FROM users').then(function (response) {
     for (var i = 0; i < response.length; i++) {
       axios
         .get(config.apiPlayerURL + response[i].uplay_id)
         .then(function (res) {
           if (res.status === 200) {
             if (res.data.playerfound === true) {
-              pool.query("UPDATE users SET agent_name = ? WHERE uplay_id = ?", [
+              pool.query('UPDATE users SET agent_name = ? WHERE uplay_id = ?', [
                 res.data.name,
                 res.data.pid,
               ]);
@@ -2493,7 +2474,7 @@ function getUpdateUserPlatforms() {
 }
 
 function setServerPrefix(serverID, prefix) {
-  pool.query("UPDATE servers SET prefix = ? WHERE server_id = ?", [
+  pool.query('UPDATE servers SET prefix = ? WHERE server_id = ?', [
     prefix,
     serverID,
   ]);
@@ -2502,7 +2483,7 @@ function setServerPrefix(serverID, prefix) {
 async function getServerPrefix(serverID) {
   let prefix = config.prefix;
   await pool
-    .query("SELECT * FROM servers WHERE server_id = ?", [serverID])
+    .query('SELECT * FROM servers WHERE server_id = ?', [serverID])
     .then(function (res) {
       if (res.length > 0) {
         prefix = res[0].prefix.length > 0 ? res[0].prefix : prefix;
@@ -2515,9 +2496,9 @@ function getErrorMessage(err_code, details = {}) {
   switch (err_code) {
     case 1:
       return UNABLE_TO_FIND_AGENT_ERR.replace(
-        "%AGENT_NAME%",
+        '%AGENT_NAME%',
         details.username,
-      ).replace("%SERVER_PLATFORM%", details.server_platform);
+      ).replace('%SERVER_PLATFORM%', details.server_platform);
     case 2:
       return AGENT_REGISTRATION_NOT_FOUND_ERR;
     case 3:
@@ -2526,17 +2507,17 @@ function getErrorMessage(err_code, details = {}) {
       return INVALID_PLATFORM_TYPE_ERR;
     case 5:
       return NOT_ADMIN_PERMISSION_ERR.replace(
-        "%SERVER_NAME%",
+        '%SERVER_NAME%',
         details.server_name,
       );
     case 6:
       return MISSING_PERMISSION_ERR;
     case 7:
-      return ROLE_NOT_FOUND_ERR.replace("%ROLE_ARG%", details.role);
+      return ROLE_NOT_FOUND_ERR.replace('%ROLE_ARG%', details.role);
     case 8:
       return INVALID_AUTO_DELETE_TYPE_ERR;
     default:
-      return "";
+      return '';
   }
 }
 
@@ -2544,7 +2525,7 @@ async function isServerAutoDelete(server_id) {
   let autoDelete = false;
 
   await pool
-    .query("SELECT * FROM servers WHERE server_id = ?", [server_id])
+    .query('SELECT * FROM servers WHERE server_id = ?', [server_id])
     .then(async function (res) {
       if (res.length > 0) {
         autoDelete = res[0].auto_delete == 1 ? true : false;
@@ -2564,7 +2545,7 @@ async function getClanMembers(message) {
 
   await message.channel.guild.members.fetch().then(async function (guild) {
     let clan_role_id = await pool
-      .query("SELECT * FROM servers WHERE server_id = ?", [message.guild.id])
+      .query('SELECT * FROM servers WHERE server_id = ?', [message.guild.id])
       .then(function (res) {
         if (res.length > 0)
           return res[0].clan_role_id ? res[0].clan_role_id : null;
@@ -2583,7 +2564,7 @@ async function getClanMembers(message) {
           );
         })
         .map(function (member) {
-          return { id: member.user.id, username: member.user.username };
+          return {id: member.user.id, username: member.user.username};
         });
     else
       members = message.guild.members.cache
@@ -2591,7 +2572,7 @@ async function getClanMembers(message) {
           return member.user.bot === false;
         })
         .map(function (member) {
-          return { id: member.user.id, username: member.user.username };
+          return {id: member.user.id, username: member.user.username};
         });
   });
 
