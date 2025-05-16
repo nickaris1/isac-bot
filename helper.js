@@ -25,10 +25,6 @@ module.exports = {
   },
 
   // Print to console with timestamp prefix
-  printStatus: function (text) {
-    console.log('[' + moment().format() + '] ' + text);
-  },
-
   logCommands: async function (message) {
     let insertId = 0;
 

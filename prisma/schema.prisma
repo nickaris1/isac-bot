@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./node_modules/.prisma/client"
 }
 
 datasource db {
@@ -8,7 +9,7 @@ datasource db {
 }
 
 model Command {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   command   String
   userId    String
   username  String
@@ -19,7 +20,7 @@ model Command {
 }
 
 model DailyExpSnapshot {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   uplayId   String
   clanExp   BigInt
   pveExp    BigInt
@@ -28,43 +29,42 @@ model DailyExpSnapshot {
 }
 
 model Platform {
-  id        Int      @id @default(autoincrement())
-  serverId  String   @unique
+  id        Int          @id @default(autoincrement())
+  serverId  String       @unique
   platform  PlatformType @default(uplay)
-  dateAdded DateTime @default(now())
+  dateAdded DateTime     @default(now())
 }
 
 model Server {
-  id            Int      @id @default(autoincrement())
-  serverId      String   @unique
-  name          String
-  prefix        String   @default("")
-  clanRoleId    String   @default("")
-  autoDelete    Boolean  @default(false)
-  dateAdded     DateTime @default(now())
-  lastActive    DateTime @default(now())
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  serverId   String   @unique
+  name       String
+  prefix     String   @default("")
+  clanRoleId String   @default("")
+  autoDelete Boolean  @default(false)
+  dateAdded  DateTime @default(now())
+  lastActive DateTime @default(now())
 }
 
 model ServerAgent {
-  id              Int      @id @default(autoincrement())
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   serverId        String
   agentName       String
-  agentId         String   @map("agent_id") // Maps to the SQL column name
+  agentId         String    @map("agent_id") // Maps to the SQL column name
   type            AgentType
   addedById       String
   addedByUsername String
-  dateAdded       DateTime @default(now())
+  dateAdded       DateTime  @default(now())
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
+  id        String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String       @unique
   uplayId   String
-  agentName String   @default("")
+  agentName String       @default("")
   platform  PlatformType @default(uplay)
-  dateAdded DateTime @default(now())
+  dateAdded DateTime     @default(now())
 }
-
 
 enum PlatformType {
   uplay
