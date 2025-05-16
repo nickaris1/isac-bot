@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Discord, {Events} from 'discord.js';
+import Discord, {EmbedBuilder, Events} from 'discord.js';
 import {config} from './config';
 import {isEmpty} from './src/utils/helpers';
 import {logger} from './src/utils/logger';
@@ -14,6 +14,7 @@ import {
   ROLE_NOT_FOUND_ERR,
   UNABLE_TO_FIND_AGENT_ERR,
 } from './src/utils/errors';
+import {getPlayerData} from './src/services/getPlayerData';
 const client = new Discord.Client({
   intents: ['Guilds'],
 });
@@ -645,169 +646,6 @@ client.on('message', async function (message) {
         return;
       });
   }
-
-  /*************************************************
-  // GET PLAYER INFO
-  *************************************************/
-  if (['agent', 'weapons', 'pve', 'dz', 'darkzone', 'exp'].includes(command)) {
-    if (args.length == 0) {
-      // query DB and checks if user has registered aka linked discord ID to uplay ID else send message prompting to register
-      await pool
-        .query('SELECT * FROM users WHERE user_id = ?', [message.author.id])
-        .then(async function (res) {
-          if (res.length == 0) {
-            message.channel.send(getErrorMessage(2)).then(function (msg) {
-              if (message.autoDelete) msg.delete({timeout: 15000});
-            });
-          } else {
-            uplay_id = res[0].uplay_id;
-            platform = res[0].platform;
-            username = res[0].agent_name;
-            playerData = await getPlayerData(uplay_id, platform, username);
-          }
-        });
-    }
-
-    if (args.length > 0) {
-      let username = args.join(' ');
-
-      // @mentioneduser id instead of agent name
-      let isMentionedUser = false;
-
-      if (message.mentions.users.first()) {
-        isMentionedUser = true;
-        agentID = await getMentionedUserAgentID(message.mentions.users.first());
-
-        if (agentID) {
-          username = agentID;
-        } else {
-          message.channel
-            .send(
-              getErrorMessage(1, {
-                username: message.mentions.users.first(),
-                server_platform: server_platform,
-              }),
-            )
-            .then(function (msg) {
-              if (message.autoDelete) msg.delete({timeout: 15000});
-            });
-          return;
-        }
-      }
-
-      // specific platform so doesn't use default server's
-      if (platforms.includes(args[0])) {
-        server_platform = args[0];
-        username = isMentionedUser ? username : args.slice(1).join(' ');
-
-        if (useTrackerGG) {
-          apiSearchURL = config.apiSearchBaseURL_TGG + server_platform + '/';
-        } else {
-          apiSearchURL =
-            config.apiSearchBaseURL + 'platform=' + server_platform + '&name=';
-        }
-      }
-
-      // search accounts
-      if (useTrackerGG) {
-        playerData = await getPlayerData('', server_platform, username);
-
-        if (lodash.isEmpty(playerData)) {
-          message.channel
-            .send(
-              getErrorMessage(1, {
-                username: username,
-                server_platform: server_platform,
-              }),
-            )
-            .then(function (msg) {
-              if (message.autoDelete) msg.delete({timeout: 15000});
-            });
-        }
-      } else {
-        helper.printStatus(
-          'API Call @ Search Account: ' + apiSearchURL + username,
-        );
-
-        await axios
-          .get(apiSearchURL + username)
-          .then(async function (response) {
-            if (response.status === 200) {
-              // account search results
-              if (response.data.results && response.data.results.length > 0) {
-                uplay_id = response.data.results[0].pid;
-                playerData = await getPlayerData(uplay_id);
-              } else {
-                message.channel
-                  .send(
-                    getErrorMessage(1, {
-                      username: username,
-                      server_platform: server_platform,
-                    }),
-                  )
-                  .then(function (msg) {
-                    if (message.autoDelete) msg.delete({timeout: 15000});
-                  });
-              }
-            }
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-      }
-    }
-  }
-
-  /*************************************************
-  // PRINT AGENT SUMMARY
-  *************************************************/
-  if (command === 'agent') {
-    if (!isEmpty(playerData)) {
-      printAgentStat(message, playerData);
-      return;
-    }
-  }
-
-  /*************************************************
-  // PRINT WEAPON USAGE
-  *************************************************/
-  if (command === 'weapons') {
-    if (!isEmpty(playerData)) {
-      printWeaponStat(message, playerData);
-      return;
-    }
-  }
-
-  /*************************************************
-  // PRINT PVE DATA
-  *************************************************/
-  if (command === 'pve') {
-    if (!isEmpty(playerData)) {
-      printPVEStat(message, playerData);
-      return;
-    }
-  }
-
-  /*************************************************
-  // PRINT DZ DATA
-  *************************************************/
-  if (command === 'dz' || command === 'darkzone') {
-    if (!isEmpty(playerData)) {
-      printDZStat(message, playerData);
-      return;
-    }
-  }
-
-  /*************************************************
-  // PRINT EXP
-  *************************************************/
-  if (command === 'exp') {
-    if (!isEmpty(playerData)) {
-      printAgentEXP(message, playerData);
-      return;
-    }
-  }
-
   /*************************************************
   // PRINT SERVER'S AGENTS DATA
   *************************************************/
@@ -1703,40 +1541,6 @@ async function printAgentEXP(message, playerData) {
   helper.saveLogCommandResult(message.logCommandID, playerData);
 }
 
-function printWeaponStat(message, playerData) {
-  let embed = new Discord.MessageEmbed()
-    .setTitle(
-      'The Division 2 - Weapon Kills: ' +
-        playerData.name +
-        ' (' +
-        playerData.platform +
-        ')',
-    )
-    .setColor('#FF6D10')
-    .setThumbnail(message.author.avatarURL())
-    .addField('Grenade', playerData.kills_wp_grenade.toLocaleString(), true)
-    .addField('Rifle', playerData.kills_wp_rifles.toLocaleString(), true)
-    .addField('Sidearm', playerData.kills_wp_pistol.toLocaleString(), true)
-    .addField('SMG', playerData.kills_wp_smg.toLocaleString(), true)
-    .addField('Shotgun', playerData.kills_wp_shotgun.toLocaleString(), true)
-    .addField('Turret', playerData.kills_turret.toLocaleString(), true)
-    .setFooter(embedFooter, embedFooterImg);
-
-  message.channel
-    .send(embed)
-    .then(function (msg) {
-      if (message.autoDelete) msg.delete({timeout: 15000});
-    })
-    .catch(function (err) {
-      if (err.code == 50013) {
-        message.author.send(MISSING_PERMISSION_ERR);
-      }
-      console.log(err);
-    });
-
-  helper.saveLogCommandResult(message.logCommandID, playerData);
-}
-
 function printDZStat(message, playerData) {
   let embed = new Discord.MessageEmbed()
     .setTitle(
@@ -1752,23 +1556,23 @@ function printDZStat(message, playerData) {
     .addField('EXP', playerData.xp_dz.toLocaleString(), true)
     .addField(
       'Playtime',
-      lodash.round(playerData.timeplayed_dz / 3600) +
+      Math.round(playerData.timeplayed_dz / 3600) +
         ' hour' +
-        (lodash.round(playerData.timeplayed_dz / 3600) > 1 ? 's' : ''),
+        (Math.round(playerData.timeplayed_dz / 3600) > 1 ? 's' : ''),
       true,
     )
     .addField(
       'Rogue Playtime',
-      lodash.round(playerData.timeplayed_rogue / 3600) +
+      Math.round(playerData.timeplayed_rogue / 3600) +
         ' hour' +
-        (lodash.round(playerData.timeplayed_rogue / 3600) > 1 ? 's' : ''),
+        (Math.round(playerData.timeplayed_rogue / 3600) > 1 ? 's' : ''),
       true,
     )
     .addField(
       'Longest Time Rogue',
-      lodash.round(playerData.maxtime_rogue / 60) +
+      Math.round(playerData.maxtime_rogue / 60) +
         ' min' +
-        (lodash.round(playerData.maxtime_rogue / 60) > 1 ? 's' : ''),
+        (Math.round(playerData.maxtime_rogue / 60) > 1 ? 's' : ''),
       true,
     )
     .addField(
@@ -1834,18 +1638,14 @@ function printPVEStat(message, playerData) {
     .setThumbnail(message.author.avatarURL())
     .addField('Level', playerData.level_pve, true)
     .addField('Gear Score', playerData.gearscore, true)
-    .addField(
-      'Specialization',
-      lodash.capitalize(playerData.specialization),
-      true,
-    )
+    .addField('Specialization', playerData.specialization, true)
     .addField('EXP', playerData.xp_ow.toLocaleString(), true)
     .addField('Items Looted', playerData.looted.toLocaleString(), true)
     .addField(
       'Playtime',
-      lodash.round(playerData.timeplayed_pve / 3600) +
+      Math.round(playerData.timeplayed_pve / 3600) +
         ' hour' +
-        (lodash.round(playerData.timeplayed_pve / 3600) > 1 ? 's' : ''),
+        (Math.round(playerData.timeplayed_pve / 3600) > 1 ? 's' : ''),
       true,
     )
     // mob kills
@@ -1927,20 +1727,6 @@ async function getServerPlatform(server_id) {
     });
 
   return platform;
-}
-
-async function getMentionedUserAgentID(user) {
-  let username = '';
-
-  await pool
-    .query('SELECT * FROM users WHERE user_id = ?', [user.id])
-    .then(async function (res) {
-      if (res.length > 0) {
-        username = res[0].agent_name;
-      }
-    });
-
-  return username;
 }
 
 function getUpdateUserPlatforms() {

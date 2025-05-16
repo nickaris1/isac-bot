@@ -1,25 +1,6 @@
-const mysql = require('promise-mysql');
-var pool;
-
 const config = {
 	production: {
-		prefix: "!",
-		getPool: function () {
-		  if (pool) return pool; // if it is already there, grab it here
-		  pool = mysql.createPool({
-				connectionLimit : 10,
-			  host     : 'localhost',
-			  user     : '',
-			  password : '',
-			  database : '',
-			  charset: "utf8mb4"
-		  });
-		  return pool;
-		},
-		adminIDs: {
-			'': 'sachii' // Discord ID
-		},
-		botToken: '', // Discord App Token
+	  botToken: '', // Discord App Token
 		devBotToken: '123456789',
 		apiSearchURL: 'https://thedivisiontab.com/api/search.php?platform=uplay&name=', // https://thedivisiontab.com/api/search.php?name=xenodus86&platform=uplay
 		apiSearchBaseURL: 'https://thedivisiontab.com/api/search.php?', // https://thedivisiontab.com/api/search.php?name=xenodus86&platform=uplay
@@ -27,7 +8,7 @@ const config = {
 
 		apiSearchBaseURL_TGG: 'https://api.tracker.gg/api/v2/division-2/standard/profile/', // https://api.tracker.gg/api/v2/division-2/standard/profile/psn/LikeJayzo
 
-		topGGtoken: '123456789',
+		topGGtoken: '',
 
 	},
 };
