@@ -1,0 +1,24 @@
+{
+  "exclude": ["node_modules/**/*", "dist/**/*"],
+  "compilerOptions": {
+    /* Language and Environment */
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "target": "ESNext" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "module": "ESNext" /* Specify what module code is generated. */,
+    "resolveJsonModule": true /* Enable importing .json files. */,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "./dist" /* Specify an output folder for all emitted files. */,
+    "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,
+    "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
+    "lib": ["esnext"],
+    "sourceMap": true,
+    "strict": true /* Enable all strict type-checking options. */,
+    "noUnusedLocals": true,
+    "strictFunctionTypes": true /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */,
+    "alwaysStrict": true /* Ensure 'use strict' is always emitted. */,
+    "skipLibCheck": false,
+    "typeRoots": ["./types", "bun-types"]
+  }
+}

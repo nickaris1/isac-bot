@@ -2,34 +2,37 @@
   "name": "isac",
   "version": "2.0.0",
   "description": "unofficial the division 2 isac bot for discord",
-  "main": "isac-bot.js",
   "dependencies": {
+    "@prisma/client": "^6.8.1",
     "axios": "^0.20.0",
     "bufferutil": "^4.0.1",
     "dblapi.js": "^2.4.1",
     "discord.js": "^12.3.1",
     "erlpack": "^0.1.3",
     "hashids": "^2.2.1",
-    "lodash": "^4.17.20",
-    "moment": "^2.29.0",
-    "pm2": "^4.5.1",
-    "promise-mysql": "^3.3.2",
+    "node-cron": "^4.0.5",
+    "pg": "^8.16.0",
     "sodium": "^3.0.2",
     "utf-8-validate": "^5.0.2",
     "zlib-sync": "^0.1.7"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.2.13",
+    "prettier": "^3.5.3",
+    "prisma": "^6.8.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/saacki/isacbot.git"
+    "url": "git+https://github.com/nickaris1/isac-bot.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/saacki/isacbot/issues"
-  },
-  "homepage": "https://repo.sachi.lk/isac"
+    "url": "https://github.com/nickaris1/isac-bot/issues"
+  }
 }
